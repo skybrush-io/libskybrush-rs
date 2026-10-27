@@ -54,6 +54,17 @@ Where the C library converts a float result to a color component, a NaN (e.g.
 from a NaN ratio of `sb_rgb_color_linear_interpolation` or a NaN
 temperature) is undefined behaviour in C. In Rust, the component is zero.
 
+## Polynomials
+
+### Extrema of polynomials of degree above 3
+
+`sb_poly_get_extrema` is implemented for polynomials of degree at most 3. For
+higher degrees, it returns `SB_SUCCESS` without writing its result, although
+its documentation says that it returns `SB_EUNIMPLEMENTED`. `Poly::extrema`
+returns `PolyError::UnsupportedDegree`, as documented; Rust has no way to
+succeed without a result. Trajectories in show files have segments of degree at
+most 3, so this does not affect them.
+
 ## Show files
 
 ### The show file is never modified

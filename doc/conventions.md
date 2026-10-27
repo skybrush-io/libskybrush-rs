@@ -145,12 +145,36 @@ A panic parks the module until reboot, which stops the show in flight.
 - The parsers are fuzzed with `cargo-fuzz`; the fuzzers build with overflow
   checks so that unchecked arithmetic is found.
 
-## Floating point, naming, toolchain
+## Naming
+
+Code that uses the C library should be portable mechanically, so names follow
+the C library: types drop `sb_` and `_t` (`sb_trajectory_player_t` →
+`TrajectoryPlayer`), and functions drop `sb_<type>_` and become methods or
+associated functions of the type. Where the C name fits Rust poorly, the C name
+is kept and a more descriptive one may be added as a type alias
+(`BinaryFile` for `BinaryFileParser`).
+
+On top of that, the following rules apply, and only these:
+
+| C | Rust |
+|---|---|
+| `sb_T_make(&t, ...)` | `T::new(...)` |
+| `sb_T_make_X(&t, ...)` | `T::X(...)` |
+| `sb_T_init(&t, ...)` | `T::new(...)` (or `T::X(...)` for `init_X`) |
+| `sb_T_destroy(&t)` | `Drop`, or nothing |
+| `sb_T_get_X(&t)` | `t.X()` |
+| `sb_T_use_X(&t, ...)`, setting up a configuration | `T::X(...)` |
+| `sb_T_size(&t)` | `t.len()` |
+| output arguments and an error code | the return value: `Result`, `Option`, or the value |
+
+Setters (`set_X`), predicates (`is_X`, `has_X`) and everything else keep their
+C names.
+
+## Floating point and toolchain
 
 As in `CLAUDE.md`: `f32` with math functions from `libm`, no `mul_add`, and no
-contortions to be bit-exact with C. Types are named after their C counterparts
-without `sb_` and `_t`, methods after the C functions unless a Rust convention
-overrides them. The minimum supported Rust version is 1.98.1.
+contortions to be bit-exact with C. The minimum supported Rust version is
+1.98.1.
 
 ## Tests
 

@@ -9,6 +9,7 @@
 
 extern crate alloc;
 
+pub mod basic_types;
 pub mod colors;
 mod crc32;
 pub mod formats;
@@ -17,3 +18,4 @@ pub mod formats;
     reason = "used by the parsers of the blocks, not ported yet"
 )]
 mod parsing;
+pub mod poly;
