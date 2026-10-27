@@ -1,0 +1,14 @@
+# The test oracle of the crate, copied by scripts/vendor-oracle.sh from the
+# commits below. Do not edit these files; change the pins in the script and
+# run it again.
+#
+# directory     repository and commit, path
+conformance/    https://github.com/skybrush-io/file-formats-doc.git 710666990d718873a8d1d45e79f778fefe32f26f
+                spec/skyb/conformance
+format/         https://github.com/skybrush-io/file-formats-doc.git 710666990d718873a8d1d45e79f778fefe32f26f
+                spec/skyb/traces
+api/            https://github.com/skybrush-io/libskybrush.git ab76b6eff08c0e45747d736c1d9ddec51a76e321 (tag 6.0.0)
+                test/api_traces, without the generators
+#
+# The API traces of <name>.json are computed from test/fixtures/<name>.skyb of
+# libskybrush, which is identical to format/<name>.skyb (checked by the script).

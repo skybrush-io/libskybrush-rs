@@ -96,9 +96,11 @@ API, which this crate does not replicate.
 
   The reference implementation of the comparison is
   `../libskybrush/test/traces/compare_traces.py`.
-- The oracle is vendored into this repository, pinned to the 6.0.0 tag of
-  libskybrush and the matching commit of the spec repository, with the source
-  commits recorded. Do not let the tests read the sibling repositories directly.
+- The oracle is vendored into `tests/oracle` by `scripts/vendor-oracle.sh`,
+  pinned to the 6.0.0 tag of libskybrush and commit `7106669` of the spec
+  repository; `tests/oracle/SOURCES` records the source commits. Do not edit
+  it by hand, and do not let the tests read the sibling repositories directly.
+  `scripts/vendor-oracle.sh --check` verifies it.
 
 ## Behaviour that is easy to get wrong
 

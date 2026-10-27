@@ -1,0 +1,206 @@
+{
+  "title": "Golden trace of a Skybrush binary show file",
+  "description": "Samples of every component of a show file (trajectory, yaw, lights, RTH plan and the output of the show controller) at regular intervals, along with the static contents of the show. Golden traces record the behaviour of the reference implementation and are used to detect unintended changes and to check that other implementations behave identically. Non-finite floating-point values are represented as null. Components that are not present in the show file are omitted.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": {
+      "description": "The version of the trace format. This definition is for version 1.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "fixture": {
+      "description": "The name of the show file that the trace was generated from",
+      "type": "string"
+    },
+    "generator": {
+      "description": "The implementation that generated the trace; informative only",
+      "type": "string"
+    },
+    "sample_interval_ms": {
+      "description": "Interval between consecutive samples, in milliseconds. Sample i is taken at i * sample_interval_ms.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "num_samples": {
+      "description": "Number of samples in each per-sample array. The samples cover the longest component of the show and a margin of one second.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "trajectory": {
+      "type": "object",
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "position_mm": { "$ref": "#/$defs/vectorSamples" },
+        "velocity_mm_s": { "$ref": "#/$defs/vectorSamples" },
+        "acceleration_mm_s2": { "$ref": "#/$defs/vectorSamples" }
+      },
+      "required": ["duration_ms", "position_mm", "velocity_mm_s", "acceleration_mm_s2"],
+      "additionalProperties": false
+    },
+    "stats": {
+      "description": "Statistics of the trajectory, calculated with a minimum takeoff ascent of 2.5 m, a takeoff speed of 2 m/s, an acceleration of 4 m/s^2, a preferred landing descent of 2.5 m and a verticality threshold of 0.05 m",
+      "type": "object",
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "earliest_above_sec": { "$ref": "#/$defs/number" },
+        "takeoff_time_sec": { "$ref": "#/$defs/number" },
+        "landing_time_sec": { "$ref": "#/$defs/number" },
+        "initial_position_mm": { "$ref": "#/$defs/vector" },
+        "position_at_landing_mm": { "$ref": "#/$defs/vector" },
+        "velocity_at_landing_mm_s": { "$ref": "#/$defs/vector" },
+        "start_to_end_distance_xy_mm": { "$ref": "#/$defs/number" }
+      },
+      "additionalProperties": false
+    },
+    "yaw_control": {
+      "type": "object",
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "yaw_deg": { "$ref": "#/$defs/numberSamples" },
+        "yaw_rate_deg_s": { "$ref": "#/$defs/numberSamples" }
+      },
+      "required": ["duration_ms", "yaw_deg", "yaw_rate_deg_s"],
+      "additionalProperties": false
+    },
+    "light_program": {
+      "type": "object",
+      "properties": {
+        "ends_at_ms": {
+          "description": "The time when the execution of the light program ends, or null if it does not end within one hour",
+          "oneOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+        },
+        "color": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/color" }
+        }
+      },
+      "required": ["ends_at_ms", "color"],
+      "additionalProperties": false
+    },
+    "event_list": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/event" }
+        }
+      },
+      "required": ["events"],
+      "additionalProperties": false
+    },
+    "rth_plan": {
+      "type": "object",
+      "properties": {
+        "entry_fields": {
+          "description": "The names of the columns of each evaluated RTH plan entry",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "entries": {
+          "description": "The RTH plan entry that applies at each sample",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/number" }
+          }
+        }
+      },
+      "required": ["entry_fields", "entries"],
+      "additionalProperties": false
+    },
+    "gcs_light_control_setup": {
+      "type": "object",
+      "properties": {
+        "coords": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+        "matrix_size": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+        "palette": { "type": "array", "items": { "type": "string", "pattern": "^[0-9a-f]{6}$" } }
+      },
+      "required": ["coords", "matrix_size", "palette"],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "show_id": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
+        "drone_index": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      },
+      "required": ["show_id", "drone_index"],
+      "additionalProperties": false
+    },
+    "show_controller": {
+      "description": "The output of the show controller when the show file is played as a screenplay with a single scene, i.e. what the drone is commanded to do",
+      "type": "object",
+      "properties": {
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "position_mm": { "oneOf": [{ "$ref": "#/$defs/vector" }, { "type": "null" }] },
+              "velocity_mm_s": { "oneOf": [{ "$ref": "#/$defs/vector" }, { "type": "null" }] },
+              "yaw_deg": { "$ref": "#/$defs/number" },
+              "yaw_rate_deg_s": { "$ref": "#/$defs/number" },
+              "color": { "oneOf": [{ "$ref": "#/$defs/color" }, { "type": "null" }] },
+              "ended": { "type": "boolean" }
+            },
+            "required": ["position_mm", "velocity_mm_s", "yaw_deg", "yaw_rate_deg_s", "color", "ended"],
+            "additionalProperties": false
+          }
+        },
+        "fired_events": {
+          "description": "Events fired by the show controller, as [sample_time_ms, event], where the event was fired when the controller was updated to the time of the sample",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [{ "type": "integer", "minimum": 0 }, { "$ref": "#/$defs/event" }],
+            "items": false,
+            "minItems": 2
+          }
+        }
+      },
+      "required": ["samples", "fired_events"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["version", "fixture", "sample_interval_ms", "num_samples", "show_controller"],
+  "additionalProperties": false,
+  "$defs": {
+    "number": {
+      "oneOf": [{ "type": "number" }, { "type": "null" }]
+    },
+    "numberSamples": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/number" }
+    },
+    "vector": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "vectorSamples": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/vector" }
+    },
+    "color": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "event": {
+      "description": "An event as [time_ms, type, subtype, payload], where the payload is the four raw bytes of the payload in file order, encoded in hexadecimal",
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "integer", "minimum": 0, "maximum": 255 },
+        { "type": "integer", "minimum": 0, "maximum": 255 },
+        { "type": "string", "pattern": "^[0-9a-f]{8}$" }
+      ],
+      "items": false,
+      "minItems": 4
+    }
+  }
+}

@@ -1,0 +1,2 @@
+# The oracle is compared byte by byte with its sources.
+tests/oracle/** -text

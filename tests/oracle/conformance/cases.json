@@ -1,0 +1,2519 @@
+{
+  "$schema": "./cases.schema.json",
+  "version": 1,
+  "tolerances": {
+    "position_mm": 0.01,
+    "yaw_deg": 0.001
+  },
+  "cases": [
+    {
+      "id": "header-empty-file",
+      "description": "An empty file has no signature.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "",
+      "expect": {
+        "file": "EPARSE"
+      }
+    },
+    {
+      "id": "header-bad-signature",
+      "description": "The signature must be 'skyb'.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796301",
+      "expect": {
+        "file": "EPARSE"
+      }
+    },
+    {
+      "id": "header-truncated-signature",
+      "description": "The file ends in the middle of the signature.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b79",
+      "expect": {
+        "file": "EPARSE"
+      }
+    },
+    {
+      "id": "header-missing-version",
+      "description": "The file ends after the signature.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b7962",
+      "expect": {
+        "file": "EPARSE"
+      }
+    },
+    {
+      "id": "header-version-0",
+      "description": "Versioning starts at version 1.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796200",
+      "expect": {
+        "file": "EPARSE"
+      }
+    },
+    {
+      "id": "header-version-3",
+      "description": "The highest supported version is version 2.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b79620300",
+      "expect": {
+        "file": "EPARSE"
+      }
+    },
+    {
+      "id": "header-v1-without-blocks",
+      "description": "A version 1 file may consist of the header only.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796201",
+      "expect": {
+        "file": "SUCCESS"
+      }
+    },
+    {
+      "id": "header-v2-missing-features",
+      "description": "Version 2 files must have a features byte.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796202",
+      "expect": {
+        "file": "EPARSE"
+      }
+    },
+    {
+      "id": "header-v2-truncated-checksum",
+      "description": "The file ends in the middle of the CRC32 checksum.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796202010000",
+      "expect": {
+        "file": "EPARSE"
+      }
+    },
+    {
+      "id": "header-v2-without-checksum",
+      "description": "Version 2 file without a checksum.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796202000112000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              500,
+              550,
+              1100,
+              1650
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              5000,
+              1000,
+              2000,
+              3000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "header-v2-valid-checksum",
+      "description": "Version 2 file with a correct CRC32 checksum.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b79620201005c9e31030b00636f6e666f726d616e63650112000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              500,
+              550,
+              1100,
+              1650
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              5000,
+              1000,
+              2000,
+              3000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "header-v2-checksum-mismatch",
+      "description": "The checksum does not match the contents of the file.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b79620201005c9e31030b00636f6e666f726d616e63650112000a0a0014001e00000015e8036400c8002c00",
+      "expect": {
+        "file": "ECORRUPTED"
+      }
+    },
+    {
+      "id": "header-v2-reserved-feature-bits",
+      "description": "Reserved bits of the features byte are ignored.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796202fe0112000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              500,
+              550,
+              1100,
+              1650
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              5000,
+              1000,
+              2000,
+              3000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "header-v2-reserved-feature-bits-with-checksum",
+      "description": "Reserved bits of the features byte are ignored when a checksum is also present.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796202ffe94b2bdc0112000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              500,
+              550,
+              1100,
+              1650
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              5000,
+              1000,
+              2000,
+              3000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "blocks-truncated-type",
+      "description": "The file ends after the type byte of the first block.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b79620103",
+      "expect": {
+        "file": "EREAD"
+      }
+    },
+    {
+      "id": "blocks-truncated-length",
+      "description": "The file ends in the middle of the length field of the first block.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b7962010305",
+      "expect": {
+        "file": "EREAD"
+      }
+    },
+    {
+      "id": "blocks-truncated-body",
+      "description": "The file is shorter than the length declared in the header of a block.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796201011c000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "EREAD"
+        },
+        "light_program": {
+          "result": "EREAD"
+        },
+        "yaw_control": {
+          "result": "EREAD"
+        },
+        "event_list": {
+          "result": "EREAD"
+        },
+        "rth_plan": {
+          "result": "EREAD"
+        },
+        "gcs_light_control_setup": {
+          "result": "EREAD"
+        },
+        "metadata": {
+          "result": "EREAD"
+        }
+      }
+    },
+    {
+      "id": "blocks-truncated-body-after-valid-block",
+      "description": "Blocks before a truncated block can still be loaded.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b79620102050004ff000032011c000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "EREAD"
+        },
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              255,
+              0,
+              0
+            ]
+          ],
+          "ends_at_ms": 1000
+        },
+        "yaw_control": {
+          "result": "EREAD"
+        },
+        "event_list": {
+          "result": "EREAD"
+        },
+        "rth_plan": {
+          "result": "EREAD"
+        },
+        "gcs_light_control_setup": {
+          "result": "EREAD"
+        },
+        "metadata": {
+          "result": "EREAD"
+        }
+      }
+    },
+    {
+      "id": "blocks-type-zero-ends-block-list",
+      "description": "Block type 0x00 ends the list of blocks; blocks after it are ignored.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b796201030b00636f6e666f726d616e63650000000112000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS"
+      }
+    },
+    {
+      "id": "blocks-unknown-type-skipped",
+      "description": "Blocks with unknown types are skipped.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b7962017f03000102030112000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              500,
+              550,
+              1100,
+              1650
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              5000,
+              1000,
+              2000,
+              3000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "blocks-duplicate-first-wins",
+      "description": "When a block type appears multiple times, the first block is used.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b7962010112000a0a0014001e00000015e8036400c8002c01011200010a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              500,
+              550,
+              1100,
+              1650
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              5000,
+              1000,
+              2000,
+              3000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "blocks-any-order",
+      "description": "Blocks may appear in any order.",
+      "spec": [
+        "overview.adoc"
+      ],
+      "bytes": "736b79620102010000030b00636f6e666f726d616e63650112000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              500,
+              550,
+              1100,
+              1650
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              5000,
+              1000,
+              2000,
+              3000
+            ]
+          ]
+        },
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "ends_at_ms": 0
+        }
+      }
+    },
+    {
+      "id": "trajectory-linear",
+      "description": "Linear segment along all three axes, scale 10.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b7962010112000a0a0014001e00000015e8036400c8002c01",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              500,
+              550,
+              1100,
+              1650
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              5000,
+              1000,
+              2000,
+              3000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-constant-axes",
+      "description": "Only the X coordinate changes; Y and Z are constant and have no control points.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b796201010e0001000032004600000001d0076400",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 2000,
+          "positions": [
+            [
+              0,
+              0,
+              50,
+              70
+            ],
+            [
+              1000,
+              50,
+              50,
+              70
+            ],
+            [
+              2000,
+              100,
+              50,
+              70
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-cubic-bezier",
+      "description": "Cubic Bezier segment along the X axis with control points 0, 0, 100, 100.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b79620101120001000000000000000002e803000064006400",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              500,
+              50,
+              0,
+              0
+            ],
+            [
+              1000,
+              100,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-poly7",
+      "description": "Seventh-degree Bezier segment along the X axis with evenly spaced control points.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b796201011a0001000000000000000003e8030100020003000400050006000700",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              500,
+              3.5,
+              0,
+              0
+            ],
+            [
+              1000,
+              7,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-multiple-segments",
+      "description": "Consecutive segments start where the previous segment ended.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b79620101160001000000000000000001e803640004e803640000e803",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 3000,
+          "positions": [
+            [
+              500,
+              50,
+              0,
+              0
+            ],
+            [
+              1000,
+              100,
+              0,
+              0
+            ],
+            [
+              1500,
+              100,
+              50,
+              0
+            ],
+            [
+              2500,
+              100,
+              100,
+              0
+            ],
+            [
+              10000,
+              100,
+              100,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-zero-duration-segment",
+      "description": "A zero-duration segment is an instantaneous jump; within the segment the position is the midpoint of the jump.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b7962010113000100000000000000000100000a0001e8031400",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 1000,
+          "positions": [
+            [
+              0,
+              5,
+              0,
+              0
+            ],
+            [
+              500,
+              15,
+              0,
+              0
+            ],
+            [
+              1000,
+              20,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-zero-scale",
+      "description": "A scale factor of zero means that the trajectory is empty.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b796201010b00000a0014001e0000000301",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 0,
+          "positions": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1000,
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-legacy-yaw-track",
+      "description": "Legacy embedded yaw track: the yaw is ignored but its control points are skipped.",
+      "spec": [
+        "trajectory_block.adoc#legacy-yaw"
+      ],
+      "bytes": "736b7962010119008a0a0014001e00840355e8036400c8002c01080701e8033200",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 2000,
+          "positions": [
+            [
+              0,
+              100,
+              200,
+              300
+            ],
+            [
+              1000,
+              1000,
+              2000,
+              3000
+            ],
+            [
+              2000,
+              500,
+              2000,
+              3000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-legacy-yaw-bezier",
+      "description": "Legacy embedded yaw track with a cubic Bezier yaw axis followed by another segment.",
+      "spec": [
+        "trajectory_block.adoc#legacy-yaw"
+      ],
+      "bytes": "736b79620101190001000000000000000081e80364000a0014001e0001e8030000",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "SUCCESS",
+          "duration_ms": 2000,
+          "positions": [
+            [
+              1000,
+              100,
+              0,
+              0
+            ],
+            [
+              1500,
+              50,
+              0,
+              0
+            ],
+            [
+              2000,
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "trajectory-truncated-header",
+      "description": "The trajectory block is shorter than its header.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b7962010105000a00000000",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "trajectory-empty-body",
+      "description": "The trajectory block has no header.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b796201010000",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "trajectory-truncated-segment-header",
+      "description": "The trajectory block ends in the middle of a segment header.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b796201010b000a000000000000000001e8",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "trajectory-truncated-control-point",
+      "description": "The trajectory block ends in the middle of a control point.",
+      "spec": [
+        "trajectory_block.adoc"
+      ],
+      "bytes": "736b796201010d000a000000000000000001e80364",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "trajectory-truncated-legacy-yaw",
+      "description": "The trajectory block ends before the legacy yaw control points declared by the segment.",
+      "spec": [
+        "trajectory_block.adoc#legacy-yaw"
+      ],
+      "bytes": "736b796201010e000a000000000000000041e8036400",
+      "expect": {
+        "file": "SUCCESS",
+        "trajectory": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "light-empty-program",
+      "description": "An empty light program is black and ends immediately.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020000",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1000,
+              0,
+              0,
+              0
+            ]
+          ],
+          "ends_at_ms": 0
+        }
+      }
+    },
+    {
+      "id": "light-set-and-fade",
+      "description": "Set a color, then fade to another one; intermediate components are truncated.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020b0004ff000032080000ff3200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              0,
+              255,
+              0,
+              0
+            ],
+            [
+              999,
+              255,
+              0,
+              0
+            ],
+            [
+              1500,
+              127,
+              0,
+              127
+            ],
+            [
+              2000,
+              0,
+              0,
+              255
+            ],
+            [
+              3000,
+              0,
+              0,
+              255
+            ]
+          ],
+          "ends_at_ms": 2000
+        }
+      }
+    },
+    {
+      "id": "light-gray-white-black",
+      "description": "Grayscale, white and black set and fade opcodes.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020f00058019071906190940320b320a3200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              250,
+              128,
+              128,
+              128
+            ],
+            [
+              750,
+              255,
+              255,
+              255
+            ],
+            [
+              1250,
+              0,
+              0,
+              0
+            ],
+            [
+              2000,
+              32,
+              32,
+              32
+            ],
+            [
+              2500,
+              64,
+              64,
+              64
+            ],
+            [
+              3000,
+              159,
+              159,
+              159
+            ],
+            [
+              3500,
+              255,
+              255,
+              255
+            ],
+            [
+              4000,
+              127,
+              127,
+              127
+            ],
+            [
+              4500,
+              0,
+              0,
+              0
+            ]
+          ],
+          "ends_at_ms": 4500
+        }
+      }
+    },
+    {
+      "id": "light-multi-byte-duration",
+      "description": "Durations are varints and may span multiple bytes.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020b0004ff0000f4030400ff0032",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              9999,
+              255,
+              0,
+              0
+            ],
+            [
+              10000,
+              0,
+              255,
+              0
+            ]
+          ],
+          "ends_at_ms": 11000
+        }
+      }
+    },
+    {
+      "id": "light-sleep-and-nop",
+      "description": "SLEEP waits without changing the color; NOP does nothing.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020e0004ff0000000102320400ff003200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              255,
+              0,
+              0
+            ],
+            [
+              1000,
+              0,
+              255,
+              0
+            ]
+          ],
+          "ends_at_ms": 2000
+        }
+      }
+    },
+    {
+      "id": "light-wait-until",
+      "description": "WAIT_UNTIL waits until the given frame since the start; a deadline in the past is a no-op.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b79620102140004ff00001903320400ff00190319040000ff1900",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              750,
+              255,
+              0,
+              0
+            ],
+            [
+              1250,
+              0,
+              255,
+              0
+            ],
+            [
+              1750,
+              0,
+              0,
+              255
+            ]
+          ],
+          "ends_at_ms": 2000
+        }
+      }
+    },
+    {
+      "id": "light-missing-end",
+      "description": "Reaching the end of the block behaves like END.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b7962010205000400ff0032",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              0,
+              255,
+              0
+            ],
+            [
+              1500,
+              0,
+              255,
+              0
+            ]
+          ],
+          "ends_at_ms": 1000
+        }
+      }
+    },
+    {
+      "id": "light-truncated-arguments",
+      "description": "Arguments truncated by the end of the block read as zeros.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b79620102020004ff",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              0,
+              255,
+              0,
+              0
+            ],
+            [
+              1000,
+              255,
+              0,
+              0
+            ]
+          ],
+          "ends_at_ms": 0
+        }
+      }
+    },
+    {
+      "id": "light-unknown-opcode",
+      "description": "An unknown opcode stops the program and the current color is held.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020c0004ff0000320e040000ff3200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              255,
+              0,
+              0
+            ],
+            [
+              1500,
+              255,
+              0,
+              0
+            ],
+            [
+              2500,
+              255,
+              0,
+              0
+            ]
+          ],
+          "ends_at_ms": 1000
+        }
+      }
+    },
+    {
+      "id": "light-zero-duration-fade",
+      "description": "A fade with zero duration sets the target color immediately, and the next fade starts from it.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020d0004ff0000320800ff00000a3200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              999,
+              255,
+              0,
+              0
+            ],
+            [
+              1000,
+              0,
+              255,
+              0
+            ],
+            [
+              1500,
+              0,
+              127,
+              0
+            ],
+            [
+              2000,
+              0,
+              0,
+              0
+            ]
+          ],
+          "ends_at_ms": 2000
+        }
+      }
+    },
+    {
+      "id": "light-finite-loop",
+      "description": "A loop with three iterations; commands due at the same instant are all executed at that instant.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b7962010213000c0304ff000019040000ff190d0400ff003200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              0,
+              255,
+              0,
+              0
+            ],
+            [
+              750,
+              0,
+              0,
+              255
+            ],
+            [
+              1000,
+              255,
+              0,
+              0
+            ],
+            [
+              2250,
+              255,
+              0,
+              0
+            ],
+            [
+              2750,
+              0,
+              0,
+              255
+            ],
+            [
+              3000,
+              0,
+              255,
+              0
+            ]
+          ],
+          "ends_at_ms": 4000
+        }
+      }
+    },
+    {
+      "id": "light-loop-single-iteration",
+      "description": "A loop with a single iteration runs once.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020d000c0104ff0000320d0400ff0032",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              255,
+              0,
+              0
+            ],
+            [
+              1500,
+              0,
+              255,
+              0
+            ]
+          ],
+          "ends_at_ms": 2000
+        }
+      }
+    },
+    {
+      "id": "light-infinite-loop",
+      "description": "A loop with an iteration count of zero repeats forever.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020e000c0004ff000019040000ff190d00",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              250,
+              255,
+              0,
+              0
+            ],
+            [
+              750,
+              0,
+              0,
+              255
+            ],
+            [
+              100250,
+              255,
+              0,
+              0
+            ],
+            [
+              100750,
+              0,
+              0,
+              255
+            ]
+          ],
+          "ends_at_ms": null
+        }
+      }
+    },
+    {
+      "id": "light-nested-loops",
+      "description": "Two nested loops with two iterations each.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b7962010211000c020c0204ff0000190d040000ff190d00",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              250,
+              255,
+              0,
+              0
+            ],
+            [
+              750,
+              255,
+              0,
+              0
+            ],
+            [
+              1250,
+              0,
+              0,
+              255
+            ],
+            [
+              1750,
+              255,
+              0,
+              0
+            ],
+            [
+              2250,
+              255,
+              0,
+              0
+            ],
+            [
+              2750,
+              0,
+              0,
+              255
+            ]
+          ],
+          "ends_at_ms": 3000
+        }
+      }
+    },
+    {
+      "id": "light-loops-nested-four-levels",
+      "description": "The reference implementation supports four levels of nested loops.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b7962010217000c020c020c020c0204ff0000320d0d0d0d0400ff003200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              15999,
+              255,
+              0,
+              0
+            ],
+            [
+              16000,
+              0,
+              255,
+              0
+            ]
+          ],
+          "ends_at_ms": 17000
+        }
+      }
+    },
+    {
+      "id": "light-loops-nested-too-deep",
+      "description": "Exceeding the maximum nesting depth stops the program and the current color is held.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201021a00040000ff320c020c020c020c020c0204ff0000320d0d0d0d0d00",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              0,
+              0,
+              255
+            ],
+            [
+              1500,
+              0,
+              0,
+              255
+            ]
+          ],
+          "ends_at_ms": 1000
+        }
+      }
+    },
+    {
+      "id": "light-loop-end-without-begin",
+      "description": "A LOOP_END without a matching LOOP_BEGIN is a no-op.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020d000d04ff0000320d0400ff003200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              255,
+              0,
+              0
+            ],
+            [
+              1500,
+              0,
+              255,
+              0
+            ]
+          ],
+          "ends_at_ms": 2000
+        }
+      }
+    },
+    {
+      "id": "light-infinite-loop-without-duration",
+      "description": "An infinite loop whose iteration takes no time stops the program.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b79620102140004ff0000320c0001040000ff000d0400ff003200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              255,
+              0,
+              0
+            ],
+            [
+              1500,
+              0,
+              0,
+              255
+            ]
+          ],
+          "ends_at_ms": 1000
+        }
+      }
+    },
+    {
+      "id": "light-infinite-loop-with-past-deadline",
+      "description": "An infinite loop whose later iterations take no time (because the deadline of WAIT_UNTIL is in the past) stops the program.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b7962010210000c0004ff00000003320d0400ff003200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              255,
+              0,
+              0
+            ],
+            [
+              1500,
+              255,
+              0,
+              0
+            ]
+          ],
+          "ends_at_ms": 1000
+        }
+      }
+    },
+    {
+      "id": "light-finite-loop-without-duration",
+      "description": "Finite loops whose iterations take no time are allowed.",
+      "spec": [
+        "light_program_block.adoc"
+      ],
+      "bytes": "736b796201020e0004ff0000320c030d0400ff003200",
+      "expect": {
+        "file": "SUCCESS",
+        "light_program": {
+          "result": "SUCCESS",
+          "colors": [
+            [
+              500,
+              255,
+              0,
+              0
+            ],
+            [
+              1000,
+              0,
+              255,
+              0
+            ],
+            [
+              1500,
+              0,
+              255,
+              0
+            ]
+          ],
+          "ends_at_ms": 2000
+        }
+      }
+    },
+    {
+      "id": "yaw-deltas",
+      "description": "Yaw offset followed by two yaw deltas with linear interpolation.",
+      "spec": [
+        "yaw_control_block.adoc"
+      ],
+      "bytes": "736b796201050b00008403e8038403e803f8f8",
+      "expect": {
+        "file": "SUCCESS",
+        "yaw_control": {
+          "result": "SUCCESS",
+          "auto_yaw": false,
+          "yaw_offset_ddeg": 900,
+          "num_deltas": 2,
+          "yaw_deg": [
+            [
+              0,
+              90
+            ],
+            [
+              500,
+              135
+            ],
+            [
+              1000,
+              180
+            ],
+            [
+              1500,
+              90
+            ],
+            [
+              2000,
+              0
+            ],
+            [
+              3000,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "yaw-auto-and-negative-values",
+      "description": "The auto flag is exposed as-is; negative offsets and deltas are allowed.",
+      "spec": [
+        "yaw_control_block.adoc"
+      ],
+      "bytes": "736b796201050700011cf2e80318fc",
+      "expect": {
+        "file": "SUCCESS",
+        "yaw_control": {
+          "result": "SUCCESS",
+          "auto_yaw": true,
+          "yaw_offset_ddeg": -3556,
+          "num_deltas": 1,
+          "yaw_deg": [
+            [
+              0,
+              -355.6
+            ],
+            [
+              500,
+              -405.6
+            ],
+            [
+              1000,
+              -455.6
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "yaw-offset-not-wrapped",
+      "description": "Parsers use the yaw offset as-is, without taking it modulo 3600.",
+      "spec": [
+        "yaw_control_block.adoc"
+      ],
+      "bytes": "736b79620105030000a00f",
+      "expect": {
+        "file": "SUCCESS",
+        "yaw_control": {
+          "result": "SUCCESS",
+          "auto_yaw": false,
+          "yaw_offset_ddeg": 4000,
+          "num_deltas": 0,
+          "yaw_deg": [
+            [
+              0,
+              400
+            ],
+            [
+              1000,
+              400
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "yaw-reserved-flag-bits",
+      "description": "Reserved bits of the flags byte are ignored.",
+      "spec": [
+        "yaw_control_block.adoc"
+      ],
+      "bytes": "736b796201050300fe6400",
+      "expect": {
+        "file": "SUCCESS",
+        "yaw_control": {
+          "result": "SUCCESS",
+          "auto_yaw": false,
+          "yaw_offset_ddeg": 100,
+          "num_deltas": 0
+        }
+      }
+    },
+    {
+      "id": "yaw-zero-duration-delta",
+      "description": "A zero-duration delta is an instantaneous change; within the delta the yaw is the midpoint of the change.",
+      "spec": [
+        "yaw_control_block.adoc"
+      ],
+      "bytes": "736b796201050b0000000000008403e8038403",
+      "expect": {
+        "file": "SUCCESS",
+        "yaw_control": {
+          "result": "SUCCESS",
+          "num_deltas": 2,
+          "yaw_deg": [
+            [
+              0,
+              45
+            ],
+            [
+              500,
+              135
+            ],
+            [
+              1000,
+              180
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "yaw-empty-body",
+      "description": "The yaw control block has no header.",
+      "spec": [
+        "yaw_control_block.adoc"
+      ],
+      "bytes": "736b796201050000",
+      "expect": {
+        "file": "SUCCESS",
+        "yaw_control": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "yaw-truncated-header",
+      "description": "The yaw control block ends in the middle of the yaw offset.",
+      "spec": [
+        "yaw_control_block.adoc"
+      ],
+      "bytes": "736b7962010502000028",
+      "expect": {
+        "file": "SUCCESS",
+        "yaw_control": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "yaw-truncated-delta",
+      "description": "The yaw control block ends in the middle of a delta.",
+      "spec": [
+        "yaw_control_block.adoc"
+      ],
+      "bytes": "736b796201050900002800e8036400e803",
+      "expect": {
+        "file": "SUCCESS",
+        "yaw_control": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "events-pyro-and-light",
+      "description": "Pyro trigger and light control events; events with equal timestamps are allowed.",
+      "spec": [
+        "event_list_block.adoc"
+      ],
+      "bytes": "736b796201062800e8030000010200000000d0070000020123010000d0070000020000011ff8b80b00000102ffffffff",
+      "expect": {
+        "file": "SUCCESS",
+        "event_list": {
+          "result": "SUCCESS",
+          "events": [
+            [
+              1000,
+              1,
+              2,
+              "00000000"
+            ],
+            [
+              2000,
+              2,
+              1,
+              "23010000"
+            ],
+            [
+              2000,
+              2,
+              0,
+              "00011ff8"
+            ],
+            [
+              3000,
+              1,
+              2,
+              "ffffffff"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "events-unknown-types-kept",
+      "description": "Unknown event types and subtypes are kept as opaque events; trailing bytes are ignored.",
+      "spec": [
+        "event_list_block.adoc"
+      ],
+      "bytes": "736b796201061700e8030000000000000000d00700007f0901020304010203",
+      "expect": {
+        "file": "SUCCESS",
+        "event_list": {
+          "result": "SUCCESS",
+          "events": [
+            [
+              1000,
+              0,
+              0,
+              "00000000"
+            ],
+            [
+              2000,
+              127,
+              9,
+              "01020304"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "events-empty-body",
+      "description": "An empty event list block contains no events.",
+      "spec": [
+        "event_list_block.adoc"
+      ],
+      "bytes": "736b796201060000",
+      "expect": {
+        "file": "SUCCESS",
+        "event_list": {
+          "result": "SUCCESS",
+          "events": []
+        }
+      }
+    },
+    {
+      "id": "events-unsorted",
+      "description": "Event lists that are not sorted by timestamp are rejected.",
+      "spec": [
+        "event_list_block.adoc"
+      ],
+      "bytes": "736b79620106140010270000010100000000e8030000010200000000",
+      "expect": {
+        "file": "SUCCESS",
+        "event_list": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "rth-plan",
+      "description": "RTH plan with two points and two entries; point coordinates are scaled but acceleration and speed are not.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201041c00000ad007e803000002002c01900170fed4fe0200200000220f003205",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [
+            [
+              3000,
+              4000
+            ],
+            [
+              -4000,
+              -3000
+            ]
+          ],
+          "num_entries": 2
+        }
+      }
+    },
+    {
+      "id": "rth-reserved-scale-bit",
+      "description": "The MSB of the scale byte is reserved and ignored.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201041200008ad007e803000002002c01900170fed4fe",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [
+            [
+              3000,
+              4000
+            ],
+            [
+              -4000,
+              -3000
+            ]
+          ],
+          "num_entries": 0
+        }
+      }
+    },
+    {
+      "id": "rth-header-only",
+      "description": "An RTH plan without points and without an entry table has no entries.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201040a00000ad007e80300000000",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [],
+          "num_entries": 0
+        }
+      }
+    },
+    {
+      "id": "rth-truncated-header",
+      "description": "The RTH plan block is shorter than its header.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201040900000ad007e803000000",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "rth-truncated-points",
+      "description": "The RTH plan block ends in the middle of the point array.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201041100000ad007e803000002002c01900170fed4",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "rth-truncated-entry-count",
+      "description": "The RTH plan block ends in the middle of the number of entries.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201040b00000ad007e8030000000001",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "rth-missing-entry",
+      "description": "The RTH plan block contains fewer entries than declared.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201040e00000ad007e8030000000002000000",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "rth-truncated-coordinate",
+      "description": "The RTH plan block ends in the middle of the neck length of an entry.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201040f00000ad007e803000000000100010010",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "rth-truncated-varuint",
+      "description": "The RTH plan block ends in the middle of a varuint in an entry.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201040f00000ad007e803000000000100100080",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "rth-varint-five-bytes",
+      "description": "Varints may be five bytes long; the time of the only entry is UINT32_MAX seconds.",
+      "spec": [
+        "rth_plan_block.adoc",
+        "overview.adoc"
+      ],
+      "bytes": "736b796201041200000ad007e80300000000010000ffffffff0f",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [],
+          "num_entries": 1
+        }
+      }
+    },
+    {
+      "id": "rth-varint-non-minimal",
+      "description": "A varint may use more bytes than necessary as long as it is at most five bytes long.",
+      "spec": [
+        "rth_plan_block.adoc",
+        "overview.adoc"
+      ],
+      "bytes": "736b796201041200000ad007e803000000000100008080808000",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [],
+          "num_entries": 1
+        }
+      }
+    },
+    {
+      "id": "rth-undecodable-entry-varint-overflow",
+      "description": "An entry with a varint that does not fit into 32 bits does not make the RTH plan invalid.",
+      "spec": [
+        "rth_plan_block.adoc",
+        "overview.adoc"
+      ],
+      "bytes": "736b796201041500000ad007e803000000000200200a00008080808010",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [],
+          "num_entries": 2
+        }
+      }
+    },
+    {
+      "id": "rth-undecodable-entry-time-overflow",
+      "description": "An entry whose activation timestamp does not fit into 32 bits does not make the RTH plan invalid.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201041500000ad007e803000000000200200a0000ffffffff0f",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [],
+          "num_entries": 2
+        }
+      }
+    },
+    {
+      "id": "rth-undecodable-entry-duration-too-long",
+      "description": "An entry with a duration longer than 2^24 seconds does not make the RTH plan invalid.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201041500000ad007e803000000000200200a00200a81808008",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [],
+          "num_entries": 2
+        }
+      }
+    },
+    {
+      "id": "rth-undecodable-entry-missing-point",
+      "description": "An entry that refers to a point that does not exist does not make the RTH plan invalid.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201041b00000ad007e803000002002c01900170fed4fe0200200a00020a0205",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [
+            [
+              3000,
+              4000
+            ],
+            [
+              -4000,
+              -3000
+            ]
+          ],
+          "num_entries": 2
+        }
+      }
+    },
+    {
+      "id": "gcs-setup",
+      "description": "Coordinates, color palette and matrix size.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b79620107170000040007000800010600ff000000ff0002040040002000",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "SUCCESS",
+          "coords": [
+            7,
+            8
+          ],
+          "matrix_size": [
+            64,
+            32
+          ],
+          "palette": [
+            "ff0000",
+            "00ff00"
+          ]
+        }
+      }
+    },
+    {
+      "id": "gcs-empty-body",
+      "description": "Missing tags take their default values.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b796201070000",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "SUCCESS",
+          "coords": [
+            0,
+            0
+          ],
+          "matrix_size": [
+            0,
+            0
+          ],
+          "palette": []
+        }
+      }
+    },
+    {
+      "id": "gcs-unknown-tag-skipped",
+      "description": "Entries with unknown tags are skipped.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b796201070d007f030001020300040001000200",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "SUCCESS",
+          "coords": [
+            1,
+            2
+          ],
+          "matrix_size": [
+            0,
+            0
+          ],
+          "palette": []
+        }
+      }
+    },
+    {
+      "id": "gcs-duplicate-tag-last-wins",
+      "description": "When a tag appears multiple times, the last occurrence wins.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b796201070e000004000100020000040003000400",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "SUCCESS",
+          "coords": [
+            3,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "id": "gcs-coordinates-maximum",
+      "description": "4095 is the largest valid coordinate.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b796201070e00000400ff0fff0f020400ff0f0000",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "SUCCESS",
+          "coords": [
+            4095,
+            4095
+          ],
+          "matrix_size": [
+            4095,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "id": "gcs-coordinates-zero",
+      "description": "0 is the smallest valid coordinate.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b79620107070000040000000500",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "SUCCESS",
+          "coords": [
+            0,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "id": "gcs-coordinates-too-large",
+      "description": "Coordinates must be smaller than 4096.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b79620107070000040000100000",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "gcs-coordinates-negative",
+      "description": "Coordinates must not be negative.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b796201070700000400ffff0000",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "gcs-matrix-size-too-large",
+      "description": "Matrix sizes must be smaller than 4096.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b79620107070002040000000010",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "gcs-invalid-coordinates-length",
+      "description": "The value of the coordinates entry must be four bytes long.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b796201070600000300010002",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "gcs-invalid-palette-length",
+      "description": "The length of the color palette must be a multiple of three.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b79620107070001040001020304",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "gcs-zero-length-entry-at-end",
+      "description": "An entry with an empty value may end exactly at the end of the block.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b796201070a00000400010002007f0000",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "SUCCESS",
+          "coords": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "id": "gcs-truncated-entry",
+      "description": "The value of an entry extends beyond the end of the block.",
+      "spec": [
+        "gcs_light_control_setup_block.adoc"
+      ],
+      "bytes": "736b7962010705000004000100",
+      "expect": {
+        "file": "SUCCESS",
+        "gcs_light_control_setup": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "metadata",
+      "description": "Show ID and drone index.",
+      "spec": [
+        "metadata_block.adoc"
+      ],
+      "bytes": "736b796201080c0000040001020304010200efbe",
+      "expect": {
+        "file": "SUCCESS",
+        "metadata": {
+          "result": "SUCCESS",
+          "show_id": "01020304",
+          "drone_index": 48879
+        }
+      }
+    },
+    {
+      "id": "metadata-empty-body",
+      "description": "Missing tags take their default values.",
+      "spec": [
+        "metadata_block.adoc"
+      ],
+      "bytes": "736b796201080000",
+      "expect": {
+        "file": "SUCCESS",
+        "metadata": {
+          "result": "SUCCESS",
+          "show_id": "00000000",
+          "drone_index": 0
+        }
+      }
+    },
+    {
+      "id": "metadata-unknown-tag-skipped",
+      "description": "Entries with unknown tags are skipped.",
+      "spec": [
+        "metadata_block.adoc"
+      ],
+      "bytes": "736b7962010809007f0100010102000700",
+      "expect": {
+        "file": "SUCCESS",
+        "metadata": {
+          "result": "SUCCESS",
+          "show_id": "00000000",
+          "drone_index": 7
+        }
+      }
+    },
+    {
+      "id": "metadata-duplicate-tag-last-wins",
+      "description": "When a tag appears multiple times, the last occurrence wins.",
+      "spec": [
+        "metadata_block.adoc"
+      ],
+      "bytes": "736b796201080a0001020001000102000200",
+      "expect": {
+        "file": "SUCCESS",
+        "metadata": {
+          "result": "SUCCESS",
+          "drone_index": 2
+        }
+      }
+    },
+    {
+      "id": "metadata-invalid-show-id-length",
+      "description": "The show ID must be four bytes long.",
+      "spec": [
+        "metadata_block.adoc"
+      ],
+      "bytes": "736b796201080600000300010203",
+      "expect": {
+        "file": "SUCCESS",
+        "metadata": {
+          "result": "ECORRUPTED"
+        }
+      }
+    },
+    {
+      "id": "metadata-invalid-drone-index-length",
+      "description": "The drone index must be two bytes long.",
+      "spec": [
+        "metadata_block.adoc"
+      ],
+      "bytes": "736b796201080600010300010203",
+      "expect": {
+        "file": "SUCCESS",
+        "metadata": {
+          "result": "ECORRUPTED"
+        }
+      }
+    }
+  ]
+}

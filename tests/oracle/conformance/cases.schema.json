@@ -1,0 +1,300 @@
+{
+  "title": "Skybrush binary show file conformance cases",
+  "description": "Test cases that specify how parsers of the Skybrush binary show file format (.skyb) must behave on valid, edge-case and malformed inputs. The expected results are derived from the specification and are independent of any particular implementation.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "description": "The version of the conformance case format. This definition is for version 1.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "tolerances": {
+      "description": "Absolute tolerances to use when comparing floating-point values",
+      "type": "object",
+      "properties": {
+        "position_mm": {
+          "description": "Tolerance of positions, in millimeters",
+          "type": "number",
+          "minimum": 0
+        },
+        "yaw_deg": {
+          "description": "Tolerance of yaw angles, in degrees",
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": ["position_mm", "yaw_deg"],
+      "additionalProperties": false
+    },
+    "cases": {
+      "description": "The list of conformance test cases",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "required": ["version", "tolerances", "cases"],
+  "additionalProperties": false,
+  "$defs": {
+    "case": {
+      "title": "Conformance test case",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Unique, stable identifier of the test case",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "description": {
+          "description": "Human-readable description of what the test case checks",
+          "type": "string"
+        },
+        "spec": {
+          "description": "The pages (and optionally the sections) of the specification that the test case is based on",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bytes": {
+          "description": "The contents of the show file, encoded in hexadecimal",
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$"
+        },
+        "expect": {
+          "$ref": "#/$defs/expectation"
+        }
+      },
+      "required": ["id", "description", "spec", "bytes", "expect"],
+      "additionalProperties": false
+    },
+    "expectation": {
+      "title": "Expected results",
+      "description": "The expected results of parsing the show file. When the file can be opened (file is SUCCESS), every block type that is not listed here must be reported as missing (ENOENT). When the file cannot be opened, no block is examined.",
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "The result of opening the file, i.e. validating the header, the checksum and the header of the first block. EPARSE: invalid signature, unsupported version or truncated header; ECORRUPTED: checksum mismatch; EREAD: the file ends in the middle of the header of the first block.",
+          "enum": ["SUCCESS", "EPARSE", "ECORRUPTED", "EREAD"]
+        },
+        "trajectory": {
+          "$ref": "#/$defs/trajectory"
+        },
+        "light_program": {
+          "$ref": "#/$defs/lightProgram"
+        },
+        "yaw_control": {
+          "$ref": "#/$defs/yawControl"
+        },
+        "event_list": {
+          "$ref": "#/$defs/eventList"
+        },
+        "rth_plan": {
+          "$ref": "#/$defs/rthPlan"
+        },
+        "gcs_light_control_setup": {
+          "$ref": "#/$defs/gcsLightControlSetup"
+        },
+        "metadata": {
+          "$ref": "#/$defs/metadata"
+        }
+      },
+      "required": ["file"],
+      "additionalProperties": false
+    },
+    "blockResult": {
+      "description": "The result of loading a block. SUCCESS: the block was loaded; ENOENT: the file contains no block of this type; EREAD: the file ends before the end of the block; ECORRUPTED: the body of the block is malformed.",
+      "enum": ["SUCCESS", "ENOENT", "EREAD", "ECORRUPTED"]
+    },
+    "timeMsec": {
+      "description": "Time since the start of the show, in milliseconds",
+      "type": "integer",
+      "minimum": 0
+    },
+    "trajectory": {
+      "title": "Expected trajectory",
+      "type": "object",
+      "properties": {
+        "result": { "$ref": "#/$defs/blockResult" },
+        "duration_ms": {
+          "description": "Total duration of the trajectory, in milliseconds",
+          "type": "integer",
+          "minimum": 0
+        },
+        "positions": {
+          "description": "Positions of the drone at the given time instants, as [time_ms, x_mm, y_mm, z_mm]",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [{ "$ref": "#/$defs/timeMsec" }, { "type": "number" }, { "type": "number" }, { "type": "number" }],
+            "items": false,
+            "minItems": 4
+          }
+        }
+      },
+      "required": ["result"],
+      "additionalProperties": false
+    },
+    "lightProgram": {
+      "title": "Expected light program",
+      "type": "object",
+      "properties": {
+        "result": { "$ref": "#/$defs/blockResult" },
+        "colors": {
+          "description": "Colors of the light program at the given time instants, as [time_ms, red, green, blue]. Implementations must produce the same colors regardless of the order in which the time instants are queried.",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              { "$ref": "#/$defs/timeMsec" },
+              { "type": "integer", "minimum": 0, "maximum": 255 },
+              { "type": "integer", "minimum": 0, "maximum": 255 },
+              { "type": "integer", "minimum": 0, "maximum": 255 }
+            ],
+            "items": false,
+            "minItems": 4
+          }
+        },
+        "ends_at_ms": {
+          "description": "The time instant when the execution of the light program ends (it has not ended 1 msec earlier but it has ended at this instant), or null if the program never ends",
+          "oneOf": [{ "$ref": "#/$defs/timeMsec" }, { "type": "null" }]
+        }
+      },
+      "required": ["result"],
+      "additionalProperties": false
+    },
+    "yawControl": {
+      "title": "Expected yaw control",
+      "type": "object",
+      "properties": {
+        "result": { "$ref": "#/$defs/blockResult" },
+        "auto_yaw": {
+          "description": "Whether the Auto flag is set",
+          "type": "boolean"
+        },
+        "yaw_offset_ddeg": {
+          "description": "The raw yaw offset, in 1/10th of degrees",
+          "type": "integer"
+        },
+        "num_deltas": {
+          "description": "The number of yaw deltas",
+          "type": "integer",
+          "minimum": 0
+        },
+        "yaw_deg": {
+          "description": "Yaw angles at the given time instants, as [time_ms, yaw_deg]",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [{ "$ref": "#/$defs/timeMsec" }, { "type": "number" }],
+            "items": false,
+            "minItems": 2
+          }
+        }
+      },
+      "required": ["result"],
+      "additionalProperties": false
+    },
+    "eventList": {
+      "title": "Expected event list",
+      "type": "object",
+      "properties": {
+        "result": { "$ref": "#/$defs/blockResult" },
+        "events": {
+          "description": "The complete list of events, as [time_ms, type, subtype, payload], where the payload is the four raw bytes of the payload in file order, encoded in hexadecimal",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              { "type": "integer", "minimum": 0 },
+              { "type": "integer", "minimum": 0, "maximum": 255 },
+              { "type": "integer", "minimum": 0, "maximum": 255 },
+              { "type": "string", "pattern": "^[0-9a-f]{8}$" }
+            ],
+            "items": false,
+            "minItems": 4
+          }
+        }
+      },
+      "required": ["result"],
+      "additionalProperties": false
+    },
+    "rthPlan": {
+      "title": "Expected RTH plan",
+      "type": "object",
+      "properties": {
+        "result": { "$ref": "#/$defs/blockResult" },
+        "points_mm": {
+          "description": "The complete list of points of the RTH plan, scaled to millimeters, as [x_mm, y_mm]",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [{ "type": "number" }, { "type": "number" }],
+            "items": false,
+            "minItems": 2
+          }
+        },
+        "num_entries": {
+          "description": "The number of entries in the RTH plan",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["result"],
+      "additionalProperties": false
+    },
+    "gcsLightControlSetup": {
+      "title": "Expected GCS light control setup",
+      "type": "object",
+      "properties": {
+        "result": { "$ref": "#/$defs/blockResult" },
+        "coords": {
+          "description": "The X-Y coordinates of the pixel represented by the drone",
+          "type": "array",
+          "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+          "items": false,
+          "minItems": 2
+        },
+        "matrix_size": {
+          "description": "The width and height of the LED matrix",
+          "type": "array",
+          "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+          "items": false,
+          "minItems": 2
+        },
+        "palette": {
+          "description": "The complete color palette, as RGB colors encoded in hexadecimal",
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[0-9a-f]{6}$" }
+        }
+      },
+      "required": ["result"],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "title": "Expected show metadata",
+      "type": "object",
+      "properties": {
+        "result": { "$ref": "#/$defs/blockResult" },
+        "show_id": {
+          "description": "The show ID, encoded in hexadecimal",
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}$"
+        },
+        "drone_index": {
+          "description": "The index of the drone within the show",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      },
+      "required": ["result"],
+      "additionalProperties": false
+    }
+  }
+}
