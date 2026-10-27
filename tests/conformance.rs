@@ -19,7 +19,7 @@ use common::errors::{ErrorName, result_name};
 use common::oracle;
 use common::ratchet::{Failure, Ratchet};
 use serde_json::{Map, Value, json};
-use skybrush::formats::binary::{BinaryBlock, BinaryBlockType, BinaryFileParser};
+use skybrush::formats::binary::{BinaryBlock, BinaryBlockType, BinaryFile};
 
 /// Names of the columns of the tuples in the cases; the suffixes of the names
 /// select the tolerances.
@@ -70,7 +70,7 @@ fn conformance_cases() {
 /// Opens the show file and returns the name of the result: `SUCCESS`, or the
 /// name of the error (`EPARSE`, `ECORRUPTED`, `EREAD`).
 fn open_file(bytes: &[u8]) -> Replay {
-    Replay::Present(json!(result_name(&BinaryFileParser::new(bytes))))
+    Replay::Present(json!(result_name(&BinaryFile::new(bytes))))
 }
 
 /// Loads the first block of the given type from the show file, and returns
@@ -78,7 +78,7 @@ fn open_file(bytes: &[u8]) -> Replay {
 /// `golden` (see `cases.schema.json`). The time instants to query are the
 /// ones in `golden`.
 fn load_block(bytes: &[u8], block_type: &str, golden: &Map<String, Value>) -> Replay {
-    let parser = match BinaryFileParser::new(bytes) {
+    let parser = match BinaryFile::new(bytes) {
         Ok(parser) => parser,
         Err(err) => return Replay::Present(json!({ "result": err.error_name() })),
     };

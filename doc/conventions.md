@@ -150,9 +150,14 @@ A panic parks the module until reboot, which stops the show in flight.
 Code that uses the C library should be portable mechanically, so names follow
 the C library: types drop `sb_` and `_t` (`sb_trajectory_player_t` →
 `TrajectoryPlayer`), and functions drop `sb_<type>_` and become methods or
-associated functions of the type. Where the C name fits Rust poorly, the C name
-is kept and a more descriptive one may be added as a type alias
-(`BinaryFile` for `BinaryFileParser`).
+associated functions of the type.
+
+A type whose C name would be misleading in Rust gets a better name. Each such
+type is listed here, so that the mapping stays mechanical:
+
+| C | Rust | Why |
+|---|---|---|
+| `sb_binary_file_parser_t` | `BinaryFile` | A validated view of a show file; reading the blocks is an iterator, not state of the parser |
 
 On top of that, the following rules apply, and only these:
 

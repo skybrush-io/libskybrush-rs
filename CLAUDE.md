@@ -43,10 +43,12 @@ What the module runtime implies (from the PR; re-check if it changes):
   prefix and the `_t` suffix (`sb_trajectory_player_t` → `TrajectoryPlayer`).
   Methods follow the names of the C functions unless a Rust convention overrides
   them (e.g. `sb_event_list_size()` → `len()`, `..._is_empty()` → `is_empty()`).
-  Keep the C names even where they fit Rust poorly, so that porting code that
-  uses the C library stays mechanical; a more descriptive name may be added as
-  a type alias (e.g. `BinaryFile` for `BinaryFileParser`). The only renames are
-  the fixed rules in `doc/conventions.md` (`make` → `new`, `get_X` → `X`...).
+  Porting code that uses the C library should stay mechanical, so method names
+  change only by the fixed rules in `doc/conventions.md` (`make` → `new`,
+  `get_X` → `X`...). A type whose C name would be misleading in Rust gets a
+  better name, listed in the same document (e.g. `sb_binary_file_parser_t` →
+  `BinaryFile`, since it is a validated view of a file, not a parser with
+  state).
 - **Borrowed data is immutable.** In C, a trajectory loaded from a show file in
   memory is a view into the show file, and cutting or clearing it writes
   through to the show file (intentional, to save RAM on the flight

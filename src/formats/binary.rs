@@ -110,17 +110,16 @@ impl core::error::Error for BinaryFileError {}
 
 /// A Skybrush binary show file in memory, with a valid header.
 ///
-/// Named after `sb_binary_file_parser_t` of the C library; [`BinaryFile`] is
-/// an alias that describes what it is.
+/// The counterpart of `sb_binary_file_parser_t` of the C library.
 #[derive(Clone, Copy, Debug)]
-pub struct BinaryFileParser<'a> {
+pub struct BinaryFile<'a> {
     bytes: &'a [u8],
     version: u8,
     /// Offset of the first block.
     start_of_first_block: usize,
 }
 
-impl<'a> BinaryFileParser<'a> {
+impl<'a> BinaryFile<'a> {
     /// Validates the header and the checksum of a show file, and the header of
     /// its first block.
     ///
@@ -207,10 +206,6 @@ impl<'a> BinaryFileParser<'a> {
     }
 }
 
-/// A Skybrush binary show file in memory, with a valid header; an alias of
-/// [`BinaryFileParser`].
-pub type BinaryFile<'a> = BinaryFileParser<'a>;
-
 /// The checksum of a show file, with the bytes of the checksum in the header
 /// taken as zeros.
 fn checksum_of(bytes: &[u8]) -> u32 {
@@ -282,7 +277,7 @@ mod tests {
     use super::*;
 
     fn blocks(bytes: &[u8]) -> Result<([BinaryBlockType; 2], usize), BinaryFileError> {
-        let parser = BinaryFileParser::new(bytes)?;
+        let parser = BinaryFile::new(bytes)?;
         let mut types = [BinaryBlockType::END; 2];
         let mut count = 0;
         for (slot, block) in types.iter_mut().zip(parser.blocks()) {
@@ -295,7 +290,7 @@ mod tests {
     #[test]
     fn blocks_are_views_into_the_file() {
         let bytes = b"skyb\x01\x03\x02\x00hi\x7f\x00\x00";
-        let parser = BinaryFileParser::new(bytes).unwrap();
+        let parser = BinaryFile::new(bytes).unwrap();
         let mut iter = parser.blocks();
         assert_eq!(
             iter.next(),
@@ -317,7 +312,7 @@ mod tests {
 
     #[test]
     fn errors_end_the_iteration() {
-        let parser = BinaryFileParser::new(b"skyb\x01\x03\x02\x00hi\x01\x05\x00ab").unwrap();
+        let parser = BinaryFile::new(b"skyb\x01\x03\x02\x00hi\x01\x05\x00ab").unwrap();
         let mut iter = parser.blocks();
         assert!(matches!(iter.next(), Some(Ok(_))));
         assert_eq!(iter.next(), Some(Err(BinaryFileError::TruncatedBlock)));
@@ -342,10 +337,10 @@ mod tests {
         let mut bytes = *b"skyb\x02\x01\0\0\0\0\x03\x01\x00!";
         let crc = ap_crc32_update(0, &bytes);
         bytes[6..10].copy_from_slice(&crc.to_le_bytes());
-        assert!(BinaryFileParser::new(&bytes).is_ok());
+        assert!(BinaryFile::new(&bytes).is_ok());
         bytes[13] = b'?';
         assert!(matches!(
-            BinaryFileParser::new(&bytes),
+            BinaryFile::new(&bytes),
             Err(BinaryFileError::ChecksumMismatch { expected, .. }) if expected == crc
         ));
     }
