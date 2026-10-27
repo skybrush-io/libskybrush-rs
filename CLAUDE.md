@@ -69,6 +69,9 @@ API, which this crate does not replicate.
 - The specification of the file format is in
   `../skybrush-file-formats-doc/doc/modules/skyb/pages/`. Where the spec and the
   C library disagree, ask; do not silently pick one.
+- Deliberate differences from the C library's behaviour (approved by the
+  maintainer) are recorded in `doc/differences-from-c.md`, with the reason and
+  examples. Add an entry whenever the crate departs from C on purpose.
 - Every trace records the inputs of each computation next to its results, so a
   test can replay it without the C library. Trajectories and light programs in
   the API scenarios are given as the hex-encoded bodies of their blocks.

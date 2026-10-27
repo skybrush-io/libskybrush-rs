@@ -100,7 +100,6 @@ real_show/rth_trajectories
 real_show/stats
 real_show/trajectory
 scenarios/builder
-scenarios/colors
 scenarios/constant_yaw
 scenarios/empty_rth_plan
 scenarios/event_lists

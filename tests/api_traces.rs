@@ -15,6 +15,8 @@
     clippy::indexing_slicing
 )]
 
+#[path = "api_traces/colors.rs"]
+mod colors;
 mod common;
 
 use common::ratchet::Ratchet;
@@ -138,6 +140,9 @@ fn replay_section(_section: &str, _show: &[u8], _golden: &Map<String, Value>) ->
 
 /// Computes a section of `scenarios.json`. The inputs of the computations are
 /// recorded in the golden section next to their results.
-fn replay_scenarios(_section: &str, _golden: &Map<String, Value>) -> Replay {
-    Replay::Unimplemented
+fn replay_scenarios(section: &str, golden: &Map<String, Value>) -> Replay {
+    match section {
+        "colors" => colors::replay(&golden[section]),
+        _ => Replay::Unimplemented,
+    }
 }

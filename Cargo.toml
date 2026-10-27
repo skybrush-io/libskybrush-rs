@@ -9,6 +9,7 @@ authors = ["CollMot Robotics Ltd."]
 publish = false
 
 [dependencies]
+libm = "0.2.16"
 
 [lints.rust]
 unsafe_code = "forbid"
