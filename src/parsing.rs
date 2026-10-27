@@ -1,5 +1,19 @@
 //! Decoding of the primitive values of the binary formats.
 
+/// Reads a signed 16-bit little-endian integer at the given offset, or `None`
+/// if the bytes end before it.
+pub(crate) fn read_i16(bytes: &[u8], offset: usize) -> Option<i16> {
+    let chunk = bytes.get(offset..)?.first_chunk::<2>()?;
+    Some(i16::from_le_bytes(*chunk))
+}
+
+/// Reads an unsigned 16-bit little-endian integer at the given offset, or
+/// `None` if the bytes end before it.
+pub(crate) fn read_u16(bytes: &[u8], offset: usize) -> Option<u16> {
+    let chunk = bytes.get(offset..)?.first_chunk::<2>()?;
+    Some(u16::from_le_bytes(*chunk))
+}
+
 /// Why a varint could not be decoded.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum VarintError {

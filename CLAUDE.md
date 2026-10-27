@@ -34,7 +34,8 @@ What the module runtime implies (from the PR; re-check if it changes):
 - **No panics on malformed input.** `unwrap`, `expect`, `panic!` and slice
   indexing are denied by clippy (see `Cargo.toml`); report errors instead. The
   parsers will be fuzzed with `cargo-fuzz`.
-- **No `unsafe`** (`unsafe_code = "forbid"`).
+- **No `unsafe`** in the library (`#![forbid(unsafe_code)]` in `src/lib.rs`).
+  Tests may allow it where they need it, e.g. for a counting allocator.
 - **Floating point:** `f32`, as in C. Be bit-exact with C only where it comes
   naturally (C is compiled with `-ffp-contract=off`, and Rust never fuses
   `a + b * c` unless `mul_add` is called). Never write convoluted arithmetic

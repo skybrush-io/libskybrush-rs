@@ -18,10 +18,14 @@
 #[path = "api_traces/colors.rs"]
 mod colors;
 mod common;
+#[path = "api_traces/trajectory.rs"]
+mod trajectory;
 
 use common::ratchet::Ratchet;
 use common::{Replay, oracle, record_section};
 use serde_json::{Map, Value};
+use skybrush::formats::binary::BinaryFile;
+use skybrush::trajectory::Trajectory;
 
 /// Keys of the trace of a show file that are inputs or informational. `end`
 /// marks the end of the trace.
@@ -134,8 +138,15 @@ fn remove_not_applicable(name: &str, golden: &mut Map<String, Value>) {
 /// Computes a section of the API trace of a show file, in the shape of the
 /// golden trace (see `tests/oracle/api/README.md`). The inputs of the
 /// computations are recorded in the golden section next to their results.
-fn replay_section(_section: &str, _show: &[u8], _golden: &Map<String, Value>) -> Replay {
-    Replay::Unimplemented
+fn replay_section(section: &str, show: &[u8], _golden: &Map<String, Value>) -> Replay {
+    let file = BinaryFile::new(show).expect("the show files of the traces are valid");
+    match section {
+        "trajectory" => {
+            let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");
+            trajectory::replay(trajectory.as_ref())
+        }
+        _ => Replay::Unimplemented,
+    }
 }
 
 /// Computes a section of `scenarios.json`. The inputs of the computations are

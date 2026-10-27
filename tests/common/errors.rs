@@ -6,6 +6,7 @@
 //! mapped here.
 
 use skybrush::formats::binary::BinaryFileError;
+use skybrush::trajectory::TrajectoryError;
 
 /// The name of the C error code that corresponds to an error.
 pub trait ErrorName {
@@ -20,6 +21,15 @@ impl ErrorName for BinaryFileError {
             }
             Self::ChecksumMismatch { .. } => "ECORRUPTED",
             Self::TruncatedBlockHeader | Self::TruncatedBlock => "EREAD",
+        }
+    }
+}
+
+impl ErrorName for TrajectoryError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::Corrupted => "ECORRUPTED",
+            Self::File(err) => err.error_name(),
         }
     }
 }

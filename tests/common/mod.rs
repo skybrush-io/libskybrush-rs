@@ -7,6 +7,7 @@ pub mod compare;
 pub mod errors;
 pub mod oracle;
 pub mod ratchet;
+pub mod values;
 
 use compare::{Comparator, Tolerances};
 use ratchet::{Failure, Ratchet};

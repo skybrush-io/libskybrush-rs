@@ -103,6 +103,12 @@ and copied only when there is no other way.
   `Copy`. Types that hold or view bulk data do not implement `Clone` unless
   cloning is cheap (a view or an `Rc`).
 
+Modified trajectories copy all their bytes, like in the C library (`Cow`).
+A possible alternative that saves that memory, at the cost of a more complex
+player: keep borrowing the unmodified segments, and store the few rewritten or
+appended segments at the end (a cut rewrites one, a landing appends one) in a
+small inline buffer. See the documentation of `Trajectory`.
+
 Whether the show controller borrows the show file (`ShowController<'a>`) or
 holds it in an `Rc<[u8]>` is an API question for the review of the screenplay
 and show controller layers.
@@ -167,6 +173,7 @@ On top of that, the following rules apply, and only these:
 | `sb_T_make_X(&t, ...)` | `T::X(...)` |
 | `sb_T_init(&t, ...)` | `T::new(...)` (or `T::X(...)` for `init_X`) |
 | `sb_T_destroy(&t)` | `Drop`, or nothing |
+| `sb_T_update_from_X(&t, ...)` | `T::from_X(...)` |
 | `sb_T_get_X(&t)` | `t.X()` |
 | `sb_T_use_X(&t, ...)`, setting up a configuration | `T::X(...)` |
 | `sb_T_size(&t)` | `t.len()` |

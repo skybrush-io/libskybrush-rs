@@ -18,8 +18,10 @@ use common::compare::{Comparator, Tolerance, Tolerances};
 use common::errors::{ErrorName, result_name};
 use common::oracle;
 use common::ratchet::{Failure, Ratchet};
+use common::values;
 use serde_json::{Map, Value, json};
 use skybrush::formats::binary::{BinaryBlock, BinaryBlockType, BinaryFile};
+use skybrush::trajectory::{Trajectory, TrajectoryPlayer};
 
 /// Names of the columns of the tuples in the cases; the suffixes of the names
 /// select the tolerances.
@@ -91,8 +93,36 @@ fn load_block(bytes: &[u8], block_type: &str, golden: &Map<String, Value>) -> Re
 
 /// Parses the body of a block that was found in the show file, like
 /// `load_block`.
-fn load_body(_block_type: &str, _block: BinaryBlock<'_>, _golden: &Map<String, Value>) -> Replay {
-    Replay::Unimplemented
+fn load_body(block_type: &str, block: BinaryBlock<'_>, golden: &Map<String, Value>) -> Replay {
+    match block_type {
+        "trajectory" => Replay::Present(load_trajectory(block.body, golden)),
+        _ => Replay::Unimplemented,
+    }
+}
+
+fn load_trajectory(body: &[u8], golden: &Map<String, Value>) -> Value {
+    let trajectory = match Trajectory::from_buffer(body) {
+        Ok(trajectory) => trajectory,
+        Err(err) => return json!({ "result": err.error_name() }),
+    };
+    let mut result = Map::new();
+    result.insert("result".into(), json!("SUCCESS"));
+    if golden.contains_key("duration_ms") {
+        result.insert(
+            "duration_ms".into(),
+            json!(trajectory.total_duration_msec()),
+        );
+    }
+    if let Some(positions) = golden.get("positions").and_then(Value::as_array) {
+        let mut player = TrajectoryPlayer::new(&trajectory);
+        let rows = positions.iter().map(|row| {
+            let time_ms = values::u32_of(&row[0]);
+            let position = player.position_at(values::msec_to_sec(time_ms));
+            json!([time_ms, position.x, position.y, position.z])
+        });
+        result.insert("positions".into(), rows.collect());
+    }
+    Value::Object(result)
 }
 
 /// The type of the blocks of a block type of the cases.

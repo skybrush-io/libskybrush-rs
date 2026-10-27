@@ -6,6 +6,7 @@
 //! it requires a global allocator only.
 
 #![no_std]
+#![forbid(unsafe_code)]
 
 extern crate alloc;
 
@@ -15,7 +16,8 @@ mod crc32;
 pub mod formats;
 #[allow(
     dead_code,
-    reason = "used by the parsers of the blocks, not ported yet"
+    reason = "the varints are used by the parsers of the blocks, not ported yet"
 )]
 mod parsing;
 pub mod poly;
+pub mod trajectory;

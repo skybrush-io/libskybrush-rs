@@ -10,7 +10,6 @@ basic_show_with_yaw/proposed_takeoff_times
 basic_show_with_yaw/rth_plan_queries
 basic_show_with_yaw/rth_trajectories
 basic_show_with_yaw/stats
-basic_show_with_yaw/trajectory
 forward_left_back/cleared_view
 forward_left_back/cuts
 forward_left_back/event_player
@@ -21,7 +20,6 @@ forward_left_back/proposed_takeoff_times
 forward_left_back/rth_plan_queries
 forward_left_back/rth_trajectories
 forward_left_back/stats
-forward_left_back/trajectory
 forward_left_back_v2/cleared_view
 forward_left_back_v2/cuts
 forward_left_back_v2/event_player
@@ -32,7 +30,6 @@ forward_left_back_v2/proposed_takeoff_times
 forward_left_back_v2/rth_plan_queries
 forward_left_back_v2/rth_trajectories
 forward_left_back_v2/stats
-forward_left_back_v2/trajectory
 hover_3m_with_gcs_control_block/cleared_view
 hover_3m_with_gcs_control_block/cuts
 hover_3m_with_gcs_control_block/event_player
@@ -43,7 +40,6 @@ hover_3m_with_gcs_control_block/proposed_takeoff_times
 hover_3m_with_gcs_control_block/rth_plan_queries
 hover_3m_with_gcs_control_block/rth_trajectories
 hover_3m_with_gcs_control_block/stats
-hover_3m_with_gcs_control_block/trajectory
 hover_3m_with_rth_plan/cleared_view
 hover_3m_with_rth_plan/cuts
 hover_3m_with_rth_plan/event_player
@@ -54,7 +50,6 @@ hover_3m_with_rth_plan/proposed_takeoff_times
 hover_3m_with_rth_plan/rth_plan_queries
 hover_3m_with_rth_plan/rth_trajectories
 hover_3m_with_rth_plan/stats
-hover_3m_with_rth_plan/trajectory
 light_program_with_wait_until_cmd/cleared_view
 light_program_with_wait_until_cmd/cuts
 light_program_with_wait_until_cmd/event_player
@@ -65,7 +60,6 @@ light_program_with_wait_until_cmd/proposed_takeoff_times
 light_program_with_wait_until_cmd/rth_plan_queries
 light_program_with_wait_until_cmd/rth_trajectories
 light_program_with_wait_until_cmd/stats
-light_program_with_wait_until_cmd/trajectory
 multiple_vertical_landing_segments/cleared_view
 multiple_vertical_landing_segments/cuts
 multiple_vertical_landing_segments/event_player
@@ -76,7 +70,6 @@ multiple_vertical_landing_segments/proposed_takeoff_times
 multiple_vertical_landing_segments/rth_plan_queries
 multiple_vertical_landing_segments/rth_trajectories
 multiple_vertical_landing_segments/stats
-multiple_vertical_landing_segments/trajectory
 pyro_events/cleared_view
 pyro_events/cuts
 pyro_events/event_player
@@ -87,7 +80,6 @@ pyro_events/proposed_takeoff_times
 pyro_events/rth_plan_queries
 pyro_events/rth_trajectories
 pyro_events/stats
-pyro_events/trajectory
 real_show/cleared_view
 real_show/cuts
 real_show/event_player
@@ -98,7 +90,6 @@ real_show/proposed_takeoff_times
 real_show/rth_plan_queries
 real_show/rth_trajectories
 real_show/stats
-real_show/trajectory
 scenarios/builder
 scenarios/constant_yaw
 scenarios/empty_rth_plan

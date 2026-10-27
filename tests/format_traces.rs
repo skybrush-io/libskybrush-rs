@@ -12,10 +12,14 @@
 )]
 
 mod common;
+#[path = "format_traces/trajectory.rs"]
+mod trajectory;
 
 use common::ratchet::Ratchet;
 use common::{Replay, oracle, record_section};
 use serde_json::{Map, Value};
+use skybrush::formats::binary::BinaryFile;
+use skybrush::trajectory::Trajectory;
 
 /// Keys of a trace that are inputs or informational, not computed.
 const HEADER: &[&str] = &[
@@ -62,8 +66,15 @@ fn format_traces() {
 /// Computes a section of the trace of a show file, in the shape of the golden
 /// trace (see `trace.schema.json`). The inputs of the computation, such as
 /// `sample_interval_ms`, are read from the golden trace.
-fn replay_section(_section: &str, _show: &[u8], _golden: &Map<String, Value>) -> Replay {
-    Replay::Unimplemented
+fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Replay {
+    let file = BinaryFile::new(show).expect("the show files of the traces are valid");
+    match section {
+        "trajectory" => {
+            let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");
+            trajectory::replay(trajectory.as_ref(), golden)
+        }
+        _ => Replay::Unimplemented,
+    }
 }
 
 /// The sections that a trace may have, from the schema of the traces.

@@ -12,7 +12,9 @@ publish = false
 libm = "0.2.16"
 
 [lints.rust]
-unsafe_code = "forbid"
+# Forbidden in the library by #![forbid(unsafe_code)] in src/lib.rs; tests may
+# allow it where they need it (the counting allocator of tests/allocations.rs).
+unsafe_code = "deny"
 missing_docs = "warn"
 
 [lints.clippy]
