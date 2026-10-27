@@ -132,7 +132,9 @@ A panic parks the module until reboot, which stops the show in flight.
 
 - `unwrap`, `expect`, `panic!` and slice indexing are denied by clippy (see
   `Cargo.toml`). Use `get`, `split_at_checked`, `?` and the like, and report
-  errors.
+  errors. Unit tests (`#[cfg(test)]`) may use them (see `clippy.toml`).
+- Where a lint is overridden in library code, use `#[expect(..., reason =
+  "...")]` with the reason why the code cannot panic or truncate.
 - Malformed input must not panic in any build. Arithmetic on values that come
   from the input uses `checked_*` or `saturating_*` (or `wrapping_*` where
   wrapping is intended), not the plain operators, since integer overflow

@@ -4,6 +4,7 @@
 #![allow(dead_code)]
 
 pub mod compare;
+pub mod errors;
 pub mod oracle;
 pub mod ratchet;
 

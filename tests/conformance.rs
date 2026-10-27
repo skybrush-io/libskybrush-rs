@@ -15,9 +15,11 @@ mod common;
 
 use common::Replay;
 use common::compare::{Comparator, Tolerance, Tolerances};
+use common::errors::{ErrorName, result_name};
 use common::oracle;
 use common::ratchet::{Failure, Ratchet};
 use serde_json::{Map, Value, json};
+use skybrush::formats::binary::{BinaryBlock, BinaryBlockType, BinaryFileParser};
 
 /// Names of the columns of the tuples in the cases; the suffixes of the names
 /// select the tolerances.
@@ -67,16 +69,44 @@ fn conformance_cases() {
 
 /// Opens the show file and returns the name of the result: `SUCCESS`, or the
 /// name of the error (`EPARSE`, `ECORRUPTED`, `EREAD`).
-fn open_file(_bytes: &[u8]) -> Replay {
-    Replay::Unimplemented
+fn open_file(bytes: &[u8]) -> Replay {
+    Replay::Present(json!(result_name(&BinaryFileParser::new(bytes))))
 }
 
 /// Loads the first block of the given type from the show file, and returns
 /// its `result` and the properties that `golden` asks for, in the shape of
 /// `golden` (see `cases.schema.json`). The time instants to query are the
 /// ones in `golden`.
-fn load_block(_bytes: &[u8], _block_type: &str, _golden: &Map<String, Value>) -> Replay {
+fn load_block(bytes: &[u8], block_type: &str, golden: &Map<String, Value>) -> Replay {
+    let parser = match BinaryFileParser::new(bytes) {
+        Ok(parser) => parser,
+        Err(err) => return Replay::Present(json!({ "result": err.error_name() })),
+    };
+    match parser.find_first_block_by_type(binary_block_type(block_type)) {
+        Ok(Some(block)) => load_body(block_type, block, golden),
+        Ok(None) => Replay::Present(json!({ "result": "ENOENT" })),
+        Err(err) => Replay::Present(json!({ "result": err.error_name() })),
+    }
+}
+
+/// Parses the body of a block that was found in the show file, like
+/// `load_block`.
+fn load_body(_block_type: &str, _block: BinaryBlock<'_>, _golden: &Map<String, Value>) -> Replay {
     Replay::Unimplemented
+}
+
+/// The type of the blocks of a block type of the cases.
+fn binary_block_type(block_type: &str) -> BinaryBlockType {
+    match block_type {
+        "trajectory" => BinaryBlockType::TRAJECTORY,
+        "light_program" => BinaryBlockType::LIGHT_PROGRAM,
+        "yaw_control" => BinaryBlockType::YAW_CONTROL,
+        "event_list" => BinaryBlockType::EVENT_LIST,
+        "rth_plan" => BinaryBlockType::RTH_PLAN,
+        "gcs_light_control_setup" => BinaryBlockType::GCS_LIGHT_CONTROL_SETUP,
+        "metadata" => BinaryBlockType::SHOW_METADATA,
+        _ => panic!("unknown block type in the cases: {block_type}"),
+    }
 }
 
 /// Checks the result of opening the file, and that the block types not listed

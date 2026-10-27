@@ -10,11 +10,8 @@
 extern crate alloc;
 
 pub mod colors;
-#[allow(
-    dead_code,
-    reason = "used by the parsers of show files, not ported yet"
-)]
 mod crc32;
+pub mod formats;
 #[allow(
     dead_code,
     reason = "used by the parsers of the blocks, not ported yet"

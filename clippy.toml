@@ -1,3 +1,9 @@
 # Names that the doc_markdown lint should not ask to put in backticks; ".."
 # keeps the default list.
 doc-valid-idents = ["ArduPilot", "MAVFTP", ".."]
+
+# Unit tests may panic; the library code may not.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true
