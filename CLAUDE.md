@@ -46,8 +46,10 @@ What the module runtime implies (from the PR; re-check if it changes):
 - **Borrowed data is immutable.** In C, a trajectory loaded from a show file in
   memory is a view into the show file, and cutting or clearing it writes
   through to the show file (intentional, to save RAM on the flight
-  controller). In Rust, a borrowed trajectory cannot be modified; operations
-  that modify it produce an owned one (or use `Cow`).
+  controller). In Rust, a borrowed trajectory cannot be modified. Share data
+  wherever possible and copy only when there is no other way: prefer a
+  narrower view (a sub-slice, a new end time) to a modified copy, and own only
+  the data that really changes (or use `Cow`). See `doc/conventions.md`.
 - The minimum supported Rust version is 1.98.1 (`rust-version` in
   `Cargo.toml`); `rust-toolchain.toml` pins the stable channel with clippy,
   rustfmt and the Cortex-M7 target.
