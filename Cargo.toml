@@ -1,0 +1,24 @@
+[package]
+name = "skybrush"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98.1"
+description = "Parsing and playback of Skybrush drone show files"
+license = "GPL-3.0-or-later"
+authors = ["CollMot Robotics Ltd."]
+publish = false
+
+[dependencies]
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# The library runs inside the flight controller, where a panic is fatal.
+# Malformed input must be reported as an error instead.
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+indexing_slicing = "deny"
