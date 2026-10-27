@@ -16,7 +16,7 @@ missing_docs = "warn"
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
-# The library runs inside the flight controller, where a panic is fatal.
+# A panic parks the flight controller module until reboot, stopping the show.
 # Malformed input must be reported as an error instead.
 unwrap_used = "deny"
 expect_used = "deny"

@@ -19,8 +19,9 @@ What the module runtime implies (from the PR; re-check if it changes):
 - Each module runs in its own thread: `Rc` is enough, `Arc` is not needed.
 - Targets: STM32H7 (Cortex-M7 with FPU, `thumbv7em-none-eabihf`) and x86-64
   SITL. Modules need Rust 1.98.1 or later.
-- Modules are trusted, privileged code without fault isolation: a panic is
-  fatal for the flight controller.
+- Modules are trusted, privileged code without fault isolation. A Rust panic
+  does not crash the firmware, but it parks the module's thread until reboot,
+  so the show stops in flight.
 
 ## Ground rules
 
