@@ -156,8 +156,14 @@ overrides them. The minimum supported Rust version is 1.98.1.
   pinned commits by `scripts/vendor-oracle.sh` (see `tests/oracle/SOURCES`).
   It is never edited by hand; `scripts/vendor-oracle.sh --check` verifies it.
 - The runners for the conformance cases, the format traces and the API traces
-  are in `tests/`. Each runner has a list of known failures. A failure that is
-  not on the list fails the test, and so does a listed case that passes, so
-  the list shrinks as the port progresses and nothing regresses silently.
+  are in `tests/`. Each runner has a list of known failures in
+  `tests/known_failures/`. A failure that is not on the list fails the test,
+  and so does a listed case that passes, so the list shrinks as the port
+  progresses and nothing regresses silently. `UPDATE_KNOWN_FAILURES=1 cargo
+  test` rewrites the lists from the current results; review the diff.
+- The comparison of traces (`tests/common/compare.rs`) is a port of
+  `compare_traces.py` of libskybrush and must agree with it. Its tests are in
+  `tests/comparator.rs`, which also has an ignored test that compares two
+  trace files, for cross-checking with the Python script.
 - The test harness may use `std` and dev-dependencies such as `serde_json`;
   the library may not.
