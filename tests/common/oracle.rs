@@ -1,5 +1,6 @@
 //! Access to the test oracle in `tests/oracle`.
 
+use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -63,6 +64,15 @@ pub fn decode_hex(hex: &str) -> Vec<u8> {
             u8::from_str_radix(&hex[i..i + 2], 16).unwrap_or_else(|_| panic!("not hex: {hex}"))
         })
         .collect()
+}
+
+/// Encodes bytes as a hexadecimal string, as used for the byte strings of the
+/// oracle.
+pub fn encode_hex(bytes: &[u8]) -> String {
+    bytes.iter().fold(String::new(), |mut hex, byte| {
+        let _ = write!(hex, "{byte:02x}");
+        hex
+    })
 }
 
 /// Asserts that a golden file has the version of the format that the harness

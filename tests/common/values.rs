@@ -2,7 +2,11 @@
 
 use serde_json::{Map, Value, json};
 use skybrush::basic_types::{Interval, Vector3, Vector3WithYaw};
+use skybrush::gcs_light_control::GcsLightControlSetup;
+use skybrush::metadata::ShowMetadata;
 use skybrush::trajectory::{Trajectory, TrajectoryPlayer, TrajectoryStats};
+
+use super::oracle::encode_hex;
 
 /// A position or another vector, as `[x, y, z]`. The yaw is not recorded.
 /// Non-finite components become `null`.
@@ -161,4 +165,30 @@ pub fn u32_of(value: &Value) -> u32 {
         .as_u64()
         .unwrap_or_else(|| panic!("not an integer: {value}"));
     u32::try_from(value).unwrap_or_else(|_| panic!("out of range: {value}"))
+}
+
+/// The metadata of a show, as the oracle records it.
+pub fn metadata(metadata: ShowMetadata) -> Map<String, Value> {
+    let mut result = Map::new();
+    result.insert("show_id".into(), json!(encode_hex(&metadata.show_id())));
+    result.insert("drone_index".into(), json!(metadata.drone_index()));
+    result
+}
+
+/// The setup of light control from the ground station, as the oracle records
+/// it.
+pub fn gcs_light_control_setup(setup: &GcsLightControlSetup<'_>) -> Map<String, Value> {
+    let palette: Vec<String> = setup
+        .palette()
+        .iter()
+        .map(|color| encode_hex(&[color.red, color.green, color.blue]))
+        .collect();
+    let mut result = Map::new();
+    result.insert("coords".into(), json!([setup.coords().x, setup.coords().y]));
+    result.insert(
+        "matrix_size".into(),
+        json!([setup.size().x, setup.size().y]),
+    );
+    result.insert("palette".into(), json!(palette));
+    result
 }

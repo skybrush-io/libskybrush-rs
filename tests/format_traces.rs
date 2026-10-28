@@ -14,17 +14,26 @@
 mod common;
 #[path = "format_traces/light_program.rs"]
 mod light_program;
+#[path = "format_traces/rth_plan.rs"]
+mod rth_plan;
 #[path = "format_traces/stats.rs"]
 mod stats;
 #[path = "format_traces/trajectory.rs"]
 mod trajectory;
+#[path = "format_traces/yaw_control.rs"]
+mod yaw_control;
 
 use common::ratchet::Ratchet;
-use common::{Replay, oracle, record_section};
-use serde_json::{Map, Value};
+use common::{Replay, events, oracle, record_section, values};
+use serde_json::{Map, Value, json};
+use skybrush::events::EventList;
 use skybrush::formats::binary::BinaryFile;
+use skybrush::gcs_light_control::GcsLightControlSetup;
 use skybrush::lights::LightProgram;
+use skybrush::metadata::ShowMetadata;
+use skybrush::rth_plan::RthPlan;
 use skybrush::trajectory::Trajectory;
+use skybrush::yaw_control::YawControl;
 
 /// Keys of a trace that are inputs or informational, not computed.
 const HEADER: &[&str] = &[
@@ -34,6 +43,10 @@ const HEADER: &[&str] = &[
     "generator",
     "sample_interval_ms",
 ];
+
+/// How long the generator samples after the end of the show, in
+/// milliseconds.
+const MARGIN_MSEC: u64 = 1000;
 
 #[test]
 fn format_traces() {
@@ -82,12 +95,75 @@ fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Re
             let program = LightProgram::from_binary_file(&file).expect("valid light program");
             light_program::replay(program.as_ref(), golden)
         }
+        "event_list" => {
+            let list = EventList::from_binary_file(&file).expect("valid event list");
+            match list {
+                Some(list) => Replay::Present(json!({ "events": events::events(&list) })),
+                None => Replay::Absent,
+            }
+        }
+        "yaw_control" => {
+            let ctrl = YawControl::from_binary_file(&file).expect("valid yaw control");
+            yaw_control::replay(ctrl.as_ref(), golden)
+        }
+        "gcs_light_control_setup" => {
+            let setup = GcsLightControlSetup::from_binary_file(&file).expect("valid setup");
+            match setup {
+                Some(setup) => {
+                    Replay::Present(Value::Object(values::gcs_light_control_setup(&setup)))
+                }
+                None => Replay::Absent,
+            }
+        }
+        "rth_plan" => {
+            let plan = RthPlan::from_binary_file(&file).expect("valid RTH plan");
+            rth_plan::replay(plan.as_ref(), golden)
+        }
+        "metadata" => {
+            let metadata = ShowMetadata::from_binary_file(&file).expect("valid metadata");
+            match metadata {
+                Some(metadata) => Replay::Present(Value::Object(values::metadata(metadata))),
+                None => Replay::Absent,
+            }
+        }
+        "num_samples" => Replay::Present(json!(num_samples(&file, golden))),
         "stats" => {
             let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");
             stats::replay(trajectory.as_ref())
         }
         _ => Replay::Unimplemented,
     }
+}
+
+/// The number of samples of the trace: the generator samples the longest
+/// component of the show, and a margin after it.
+fn num_samples(file: &BinaryFile<'_>, golden: &Map<String, Value>) -> u64 {
+    let interval = golden["sample_interval_ms"]
+        .as_u64()
+        .expect("sample interval");
+    let trajectory = Trajectory::from_binary_file(file).expect("valid trajectory");
+    let yaw_control = YawControl::from_binary_file(file).expect("valid yaw control");
+    let program = LightProgram::from_binary_file(file).expect("valid light program");
+    let events = EventList::from_binary_file(file).expect("valid event list");
+    let end_msec = [
+        trajectory.map(|trajectory| u64::from(trajectory.total_duration_msec())),
+        yaw_control.map(|ctrl| u64::from(ctrl.total_duration_msec())),
+        program.and_then(|program| {
+            common::lights::end_msec(&program, light_program::MAX_LIGHT_PROGRAM_DURATION_MSEC)
+        }),
+        events.and_then(|events| {
+            events
+                .as_slice()
+                .last()
+                .map(|event| u64::from(event.time_msec))
+        }),
+    ]
+    .into_iter()
+    .flatten()
+    .max()
+    .unwrap_or(0)
+        + MARGIN_MSEC;
+    end_msec.div_ceil(interval) + 1
 }
 
 /// The sections that a trace may have, from the schema of the traces.

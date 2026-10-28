@@ -13,13 +13,15 @@ extern crate alloc;
 pub mod basic_types;
 pub mod colors;
 mod crc32;
+pub mod events;
 pub mod formats;
+pub mod gcs_light_control;
 pub mod lights;
+pub mod metadata;
 pub mod motion;
-#[allow(
-    dead_code,
-    reason = "the varints are used by the parsers of the blocks, not ported yet"
-)]
+pub mod palette;
 mod parsing;
 pub mod poly;
+pub mod rth_plan;
 pub mod trajectory;
+pub mod yaw_control;

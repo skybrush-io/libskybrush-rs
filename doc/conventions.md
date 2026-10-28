@@ -189,6 +189,11 @@ not be idiomatic Rust:
 | C | Rust | Why |
 |---|---|---|
 | `sb_trajectory_update_from_builder(&t, &builder)` | `builder.build()` | A builder finishes with `build()`, which consumes it |
+| `sb_event_list_get_ptr(&t, i)`, `sb_event_list_get_ptr_const(&t, i)` | `t.get_mut(i)`, `t.get(i)` | The names of slices and `Vec` |
+| `sb_rth_plan_entry_clear(&e, plan, t)` | `RthPlanEntry::new(plan, t)` | It sets every field, so it creates an entry rather than clearing one |
+
+Fields keep their C names too. A C name that is a Rust keyword is prefixed
+with the name of the type: the `type` of `sb_event_t` is `Event::event_type`.
 
 ## Paths
 

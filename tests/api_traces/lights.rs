@@ -2,8 +2,6 @@
 //! `light_programs` section of `scenarios.json`: the time instants where the
 //! light player wakes up, and the colors of light programs.
 
-use std::fmt::Write as _;
-
 use serde_json::{Map, Value, json};
 use skybrush::colors::RgbColor;
 use skybrush::lights::{LightPlayer, LightProgram};
@@ -11,7 +9,7 @@ use skybrush::lights::{LightPlayer, LightProgram};
 use crate::common::Replay;
 use crate::common::errors::result_name;
 use crate::common::lights::color;
-use crate::common::oracle::decode_hex;
+use crate::common::oracle::{decode_hex, encode_hex};
 
 /// How far the generator of the API traces follows the light player, in
 /// milliseconds, and how many changes it records at most.
@@ -88,7 +86,10 @@ fn playback(program: &LightProgram<'_>) -> Map<String, Value> {
         .collect();
 
     let mut result = Map::new();
-    result.insert("bytecode_hex".to_owned(), json!(hex(program.bytes())));
+    result.insert(
+        "bytecode_hex".to_owned(),
+        json!(encode_hex(program.bytes())),
+    );
     result.insert("changes_ms".to_owned(), changes.into());
     result.insert("ended".to_owned(), json!(ended));
     result.insert("color".to_owned(), colors);
@@ -100,11 +101,4 @@ fn rgb_of(value: &Value) -> RgbColor {
         u8::try_from(value[index].as_u64().expect("color component")).expect("a byte")
     };
     RgbColor::new(component(0), component(1), component(2))
-}
-
-fn hex(bytes: &[u8]) -> String {
-    bytes.iter().fold(String::new(), |mut hex, byte| {
-        let _ = write!(hex, "{byte:02x}");
-        hex
-    })
 }

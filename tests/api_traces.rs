@@ -22,20 +22,28 @@ mod colors;
 mod common;
 #[path = "api_traces/edit.rs"]
 mod edit;
+#[path = "api_traces/events.rs"]
+mod events;
 #[path = "api_traces/lights.rs"]
 mod lights;
 #[path = "api_traces/motion.rs"]
 mod motion;
+#[path = "api_traces/rth_plan.rs"]
+mod rth_plan;
 #[path = "api_traces/stats.rs"]
 mod stats;
 #[path = "api_traces/trajectory.rs"]
 mod trajectory;
+#[path = "api_traces/yaw_control.rs"]
+mod yaw_control;
 
 use common::ratchet::Ratchet;
 use common::{Replay, oracle, record_section};
 use serde_json::{Map, Value};
+use skybrush::events::EventList;
 use skybrush::formats::binary::BinaryFile;
 use skybrush::lights::LightProgram;
+use skybrush::rth_plan::RthPlan;
 use skybrush::trajectory::Trajectory;
 
 /// Keys of the trace of a show file that are inputs or informational. `end`
@@ -168,6 +176,18 @@ fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Re
             let program = LightProgram::from_binary_file(&file).expect("valid light program");
             lights::replay_light_player(program.as_ref())
         }
+        "rth_plan_queries" => {
+            let plan = RthPlan::from_binary_file(&file).expect("valid RTH plan");
+            rth_plan::replay_queries(plan.filter(|_| trajectory().is_some()))
+        }
+        "rth_trajectories" => {
+            let plan = RthPlan::from_binary_file(&file).expect("valid RTH plan");
+            rth_plan::replay_trajectories(trajectory().as_ref(), plan.as_ref())
+        }
+        "event_player" => {
+            let list = EventList::from_binary_file(&file).expect("valid event list");
+            events::replay_event_player(list, golden.get(section))
+        }
         _ => Replay::Unimplemented,
     }
 }
@@ -182,6 +202,10 @@ fn replay_scenarios(section: &str, golden: &Map<String, Value>) -> Replay {
         "builder" => builder::replay(&golden[section]),
         "stats_scenarios" => stats::replay_scenarios(&golden[section]),
         "bounding_boxes" => trajectory::replay_bounding_boxes(&golden[section]),
+        "event_lists" => events::replay_scenarios(&golden[section]),
+        "rth_conversions" => rth_plan::replay_conversions(&golden[section]),
+        "empty_rth_plan" => rth_plan::replay_empty_plan(),
+        "constant_yaw" => yaw_control::replay_constant_yaw(&golden[section]),
         _ => Replay::Unimplemented,
     }
 }

@@ -10,7 +10,7 @@ use crate::common::values::sample_times;
 
 /// How far the generator of the traces scans a light program for its end, in
 /// milliseconds.
-const MAX_LIGHT_PROGRAM_DURATION_MSEC: u64 = 3_600_000;
+pub const MAX_LIGHT_PROGRAM_DURATION_MSEC: u64 = 3_600_000;
 
 pub fn replay(program: Option<&LightProgram<'_>>, golden: &Map<String, Value>) -> Replay {
     let Some(program) = program else {

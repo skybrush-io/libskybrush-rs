@@ -16,14 +16,20 @@ mod common;
 use common::Replay;
 use common::compare::{Comparator, Tolerance, Tolerances};
 use common::errors::{ErrorName, result_name};
+use common::events;
 use common::lights;
 use common::oracle;
 use common::ratchet::{Failure, Ratchet};
 use common::values;
 use serde_json::{Map, Value, json};
+use skybrush::events::EventList;
 use skybrush::formats::binary::{BinaryBlock, BinaryBlockType, BinaryFile};
+use skybrush::gcs_light_control::GcsLightControlSetup;
 use skybrush::lights::{LightPlayer, LightProgram};
+use skybrush::metadata::ShowMetadata;
+use skybrush::rth_plan::RthPlan;
 use skybrush::trajectory::{Trajectory, TrajectoryPlayer};
+use skybrush::yaw_control::{YawControl, YawPlayer};
 
 /// Names of the columns of the tuples in the cases; the suffixes of the names
 /// select the tolerances.
@@ -99,6 +105,38 @@ fn load_body(block_type: &str, block: BinaryBlock<'_>, golden: &Map<String, Valu
     match block_type {
         "trajectory" => Replay::Present(load_trajectory(block.body, golden)),
         "light_program" => Replay::Present(load_light_program(block.body, golden)),
+        "event_list" => Replay::Present(load_event_list(block.body)),
+        "yaw_control" => Replay::Present(load_yaw_control(block.body, golden)),
+        "gcs_light_control_setup" => {
+            Replay::Present(match GcsLightControlSetup::from_buffer(block.body) {
+                Ok(setup) => {
+                    let mut result = Map::new();
+                    result.insert("result".into(), json!("SUCCESS"));
+                    result.extend(values::gcs_light_control_setup(&setup));
+                    Value::Object(result)
+                }
+                Err(err) => json!({ "result": err.error_name() }),
+            })
+        }
+        "rth_plan" => Replay::Present(match RthPlan::from_buffer(block.body) {
+            Ok(plan) => {
+                let points: Vec<Value> = (0..plan.num_points())
+                    .filter_map(|index| plan.point(index))
+                    .map(|point| json!([point.x, point.y]))
+                    .collect();
+                json!({ "result": "SUCCESS", "points_mm": points, "num_entries": plan.num_entries() })
+            }
+            Err(err) => json!({ "result": err.error_name() }),
+        }),
+        "metadata" => Replay::Present(match ShowMetadata::from_buffer(block.body) {
+            Ok(metadata) => {
+                let mut result = Map::new();
+                result.insert("result".into(), json!("SUCCESS"));
+                result.extend(values::metadata(metadata));
+                Value::Object(result)
+            }
+            Err(err) => json!({ "result": err.error_name() }),
+        }),
         _ => Replay::Unimplemented,
     }
 }
@@ -169,6 +207,37 @@ fn load_light_program(body: &[u8], golden: &Map<String, Value>) -> Value {
         result.insert("ends_at_ms".into(), json!(end));
     }
     Value::Object(result)
+}
+
+fn load_yaw_control(body: &[u8], golden: &Map<String, Value>) -> Value {
+    let ctrl = match YawControl::from_buffer(body) {
+        Ok(ctrl) => ctrl,
+        Err(err) => return json!({ "result": err.error_name() }),
+    };
+    let mut result = Map::new();
+    result.insert("result".into(), json!("SUCCESS"));
+    result.insert("auto_yaw".into(), json!(ctrl.auto_yaw()));
+    result.insert("yaw_offset_ddeg".into(), json!(ctrl.yaw_offset_ddeg()));
+    result.insert("num_deltas".into(), json!(ctrl.num_deltas()));
+    if let Some(rows) = golden.get("yaw_deg").and_then(Value::as_array) {
+        let mut player = YawPlayer::new(&ctrl);
+        let rows: Vec<Value> = rows
+            .iter()
+            .map(|row| {
+                let msec = values::u32_of(&row[0]);
+                json!([msec, player.yaw_at(values::msec_to_sec(msec))])
+            })
+            .collect();
+        result.insert("yaw_deg".into(), rows.into());
+    }
+    Value::Object(result)
+}
+
+fn load_event_list(body: &[u8]) -> Value {
+    match EventList::from_buffer(body) {
+        Ok(list) => json!({ "result": "SUCCESS", "events": events::events(&list) }),
+        Err(err) => json!({ "result": err.error_name() }),
+    }
 }
 
 /// The type of the blocks of a block type of the cases.

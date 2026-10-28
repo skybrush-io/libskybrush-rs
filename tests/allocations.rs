@@ -22,9 +22,14 @@ use std::cell::Cell;
 use std::hint::black_box;
 
 use common::oracle;
+use skybrush::events::{EventList, EventListPlayer};
 use skybrush::formats::binary::BinaryFile;
+use skybrush::gcs_light_control::GcsLightControlSetup;
 use skybrush::lights::{LightPlayer, LightProgram};
+use skybrush::metadata::ShowMetadata;
+use skybrush::rth_plan::RthPlan;
 use skybrush::trajectory::{Trajectory, TrajectoryPlayer, TrajectoryStatsCalculator};
+use skybrush::yaw_control::{YawControl, YawPlayer};
 
 /// Counts the allocations of each thread, since tests run in parallel.
 struct CountingAllocator;
@@ -118,6 +123,76 @@ fn light_programs_are_loaded_and_played_without_allocating() {
             "{name}: loading or playing the light program allocated"
         );
     }
+}
+
+#[test]
+fn yaw_control_is_loaded_and_played_without_allocating() {
+    let show = oracle::read_bytes("format/basic_show_with_yaw.skyb");
+    let count = allocations_of(|| {
+        let file = BinaryFile::new(&show).unwrap();
+        let ctrl = YawControl::from_binary_file(&file).unwrap().unwrap();
+        let mut player = YawPlayer::new(&ctrl);
+        // Forwards, backwards and after the end
+        for step in (0..=700_u16).chain((0..=700).rev()) {
+            let time_sec = f32::from(step) / 10.0;
+            black_box(player.yaw_at(time_sec));
+            black_box(player.yaw_rate_at(time_sec));
+        }
+        black_box(player.total_duration_msec());
+    });
+    assert_eq!(count, 0, "loading or playing the yaw control allocated");
+}
+
+#[test]
+fn rth_plans_are_loaded_and_evaluated_without_allocating() {
+    let show = oracle::read_bytes("format/hover_3m_with_rth_plan.skyb");
+    let count = allocations_of(|| {
+        let file = BinaryFile::new(&show).unwrap();
+        let plan = RthPlan::from_binary_file(&file).unwrap().unwrap();
+        for step in 0..=1000_u16 {
+            black_box(plan.evaluate_at(f32::from(step) / 10.0).unwrap());
+        }
+    });
+    assert_eq!(count, 0, "loading or evaluating the RTH plan allocated");
+}
+
+#[test]
+fn metadata_and_light_control_setup_are_loaded_without_allocating() {
+    let show = oracle::read_bytes("format/hover_3m_with_gcs_control_block.skyb");
+    let count = allocations_of(|| {
+        let file = BinaryFile::new(&show).unwrap();
+        let setup = GcsLightControlSetup::from_binary_file(&file)
+            .unwrap()
+            .unwrap();
+        black_box(setup.palette().color(0));
+        black_box(ShowMetadata::from_binary_file(&file).unwrap());
+    });
+    assert_eq!(
+        count, 0,
+        "loading the metadata or the light control setup allocated"
+    );
+}
+
+#[test]
+fn events_are_played_without_allocating() {
+    // The events are copied out of the show file when they are loaded, but
+    // firing them must not allocate
+    let show = oracle::read_bytes("format/pyro_events.skyb");
+    let file = BinaryFile::new(&show).unwrap();
+    let mut list = EventList::from_binary_file(&file).unwrap().unwrap();
+    list.add_pyro_off_events(500).unwrap();
+    let count = allocations_of(|| {
+        let mut player = EventListPlayer::new(&list);
+        for step in 0..=1000_u16 {
+            let time_sec = f32::from(step) / 10.0;
+            while let Some(event) = player.next_event_not_later_than(time_sec) {
+                black_box(event);
+            }
+        }
+        player.seek(42.0);
+        black_box(player.peek_next_event());
+    });
+    assert_eq!(count, 0, "firing the events allocated");
 }
 
 #[test]

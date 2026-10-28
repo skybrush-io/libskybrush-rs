@@ -5,11 +5,16 @@
 //! matches are exhaustive, so a new variant does not compile until it is
 //! mapped here.
 
+use skybrush::events::EventListError;
 use skybrush::formats::binary::BinaryFileError;
+use skybrush::gcs_light_control::GcsLightControlSetupError;
 use skybrush::lights::LightProgramError;
+use skybrush::metadata::ShowMetadataError;
+use skybrush::rth_plan::{RthPlanError, RthTrajectoryError};
 use skybrush::trajectory::{
     LandingError, TrajectoryBuilderError, TrajectoryError, TrajectoryStatsError,
 };
+use skybrush::yaw_control::YawControlError;
 
 /// The name of the C error code that corresponds to an error.
 pub trait ErrorName {
@@ -75,6 +80,67 @@ impl ErrorName for LightProgramError {
         match self {
             Self::File(err) => err.error_name(),
             Self::OutOfMemory => "ENOMEM",
+        }
+    }
+}
+
+impl ErrorName for EventListError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::Corrupted => "ECORRUPTED",
+            Self::OutOfOrder => "EINVAL",
+            Self::File(err) => err.error_name(),
+            Self::OutOfMemory => "ENOMEM",
+        }
+    }
+}
+
+impl ErrorName for YawControlError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::Corrupted => "ECORRUPTED",
+            Self::File(err) => err.error_name(),
+            Self::OutOfMemory => "ENOMEM",
+        }
+    }
+}
+
+impl ErrorName for ShowMetadataError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::Corrupted => "ECORRUPTED",
+            Self::File(err) => err.error_name(),
+        }
+    }
+}
+
+impl ErrorName for GcsLightControlSetupError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::Corrupted => "ECORRUPTED",
+            Self::File(err) => err.error_name(),
+        }
+    }
+}
+
+impl ErrorName for RthPlanError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::Corrupted => "ECORRUPTED",
+            Self::File(err) => err.error_name(),
+            Self::VarintOverflow | Self::TimeOverflow | Self::DurationTooLong => "EOVERFLOW",
+            Self::MissingPoint => "EINVAL",
+        }
+    }
+}
+
+impl ErrorName for RthTrajectoryError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::ScaleOverflow | Self::DurationOverflow => "EOVERFLOW",
+            Self::InvalidDuration => "EINVAL",
+            Self::Builder(err) => err.error_name(),
+            Self::Trajectory(err) => err.error_name(),
         }
     }
 }
