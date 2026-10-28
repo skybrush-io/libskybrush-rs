@@ -4,6 +4,7 @@ use serde_json::{Map, Value, json};
 use skybrush::colors::{RgbColor, RgbwColor, RgbwConversion};
 
 use crate::common::Replay;
+use crate::common::values::to_f32;
 
 pub fn replay(golden: &Value) -> Replay {
     let golden = golden.as_object().expect("colors");
@@ -127,14 +128,6 @@ fn rgbw_to_json(color: RgbwColor) -> Value {
 
 /// Converts a number of the trace to `f32`. Floats in the traces are `f32`
 /// values printed with enough digits to read them back exactly.
-#[expect(
-    clippy::cast_possible_truncation,
-    reason = "the traces hold f32 values"
-)]
-fn to_f32(value: f64) -> f32 {
-    value as f32
-}
-
 fn number_to_f32(value: &Value) -> f32 {
     to_f32(value.as_f64().expect("number"))
 }

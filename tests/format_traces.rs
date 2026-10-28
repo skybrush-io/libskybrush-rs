@@ -12,6 +12,8 @@
 )]
 
 mod common;
+#[path = "format_traces/stats.rs"]
+mod stats;
 #[path = "format_traces/trajectory.rs"]
 mod trajectory;
 
@@ -72,6 +74,10 @@ fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Re
         "trajectory" => {
             let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");
             trajectory::replay(trajectory.as_ref(), golden)
+        }
+        "stats" => {
+            let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");
+            stats::replay(trajectory.as_ref())
         }
         _ => Replay::Unimplemented,
     }

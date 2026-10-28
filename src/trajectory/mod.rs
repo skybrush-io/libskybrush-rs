@@ -7,6 +7,7 @@
 
 mod player;
 mod segment;
+mod stats;
 
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
@@ -14,6 +15,10 @@ use core::{error, fmt};
 
 pub use player::{TrajectoryPlayer, TrajectoryPlayerState};
 pub use segment::TrajectorySegment;
+pub use stats::{
+    LandingStats, TakeoffStats, TrajectoryStatComponents, TrajectoryStats,
+    TrajectoryStatsCalculator, TrajectoryStatsError,
+};
 
 use crate::basic_types::{BoundingBox, Interval, Vector3WithYaw};
 use crate::formats::binary::{BinaryBlockType, BinaryFile, BinaryFileError};

@@ -6,7 +6,7 @@
 //! mapped here.
 
 use skybrush::formats::binary::BinaryFileError;
-use skybrush::trajectory::TrajectoryError;
+use skybrush::trajectory::{TrajectoryError, TrajectoryStatsError};
 
 /// The name of the C error code that corresponds to an error.
 pub trait ErrorName {
@@ -30,6 +30,17 @@ impl ErrorName for TrajectoryError {
         match self {
             Self::Corrupted => "ECORRUPTED",
             Self::File(err) => err.error_name(),
+        }
+    }
+}
+
+impl ErrorName for TrajectoryStatsError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::InvalidAcceleration
+            | Self::InvalidTakeoffSpeed
+            | Self::InvalidMinAscent
+            | Self::InvalidPreferredDescent => "EINVAL",
         }
     }
 }

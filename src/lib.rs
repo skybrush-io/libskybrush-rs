@@ -14,6 +14,7 @@ pub mod basic_types;
 pub mod colors;
 mod crc32;
 pub mod formats;
+pub mod motion;
 #[allow(
     dead_code,
     reason = "the varints are used by the parsers of the blocks, not ported yet"

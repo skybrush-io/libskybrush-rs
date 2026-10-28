@@ -18,6 +18,10 @@
 #[path = "api_traces/colors.rs"]
 mod colors;
 mod common;
+#[path = "api_traces/motion.rs"]
+mod motion;
+#[path = "api_traces/stats.rs"]
+mod stats;
 #[path = "api_traces/trajectory.rs"]
 mod trajectory;
 
@@ -138,12 +142,17 @@ fn remove_not_applicable(name: &str, golden: &mut Map<String, Value>) {
 /// Computes a section of the API trace of a show file, in the shape of the
 /// golden trace (see `tests/oracle/api/README.md`). The inputs of the
 /// computations are recorded in the golden section next to their results.
-fn replay_section(section: &str, show: &[u8], _golden: &Map<String, Value>) -> Replay {
+fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Replay {
     let file = BinaryFile::new(show).expect("the show files of the traces are valid");
+    let trajectory = || Trajectory::from_binary_file(&file).expect("valid trajectory");
     match section {
-        "trajectory" => {
-            let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");
-            trajectory::replay(trajectory.as_ref())
+        "trajectory" => trajectory::replay(trajectory().as_ref()),
+        "stats" => stats::replay_stats(trajectory().as_ref(), &golden[section]),
+        "proposed_takeoff_times" => {
+            stats::replay_proposed_takeoff_times(trajectory().as_ref(), &golden[section])
+        }
+        "proposed_landing_times" => {
+            stats::replay_proposed_landing_times(trajectory().as_ref(), &golden[section])
         }
         _ => Replay::Unimplemented,
     }
@@ -154,6 +163,7 @@ fn replay_section(section: &str, show: &[u8], _golden: &Map<String, Value>) -> R
 fn replay_scenarios(section: &str, golden: &Map<String, Value>) -> Replay {
     match section {
         "colors" => colors::replay(&golden[section]),
+        "motion" => motion::replay(&golden[section]),
         _ => Replay::Unimplemented,
     }
 }

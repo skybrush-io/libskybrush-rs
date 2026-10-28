@@ -1,5 +1,5 @@
-//! Checks that loading from a show file in memory and playback do not
-//! allocate.
+//! Checks that loading from a show file in memory, playback and statistics
+//! do not allocate.
 //!
 //! The heap of the module on the flight controller may not grow while the
 //! drone is armed, so playback must not allocate. Reading from a show file in
@@ -23,7 +23,7 @@ use std::hint::black_box;
 
 use common::oracle;
 use skybrush::formats::binary::BinaryFile;
-use skybrush::trajectory::{Trajectory, TrajectoryPlayer};
+use skybrush::trajectory::{Trajectory, TrajectoryPlayer, TrajectoryStatsCalculator};
 
 /// Counts the allocations of each thread, since tests run in parallel.
 struct CountingAllocator;
@@ -84,8 +84,13 @@ fn trajectories_are_loaded_and_played_without_allocating() {
             }
             black_box(trajectory.axis_aligned_bounding_box());
             black_box(trajectory.end_position());
+            black_box(TrajectoryStatsCalculator::new(1000.0).run(&trajectory)).unwrap();
+            black_box(trajectory.propose_landing_time_sec(2500.0, 50.0));
         });
-        assert_eq!(count, 0, "{name}: loading or playback allocated");
+        assert_eq!(
+            count, 0,
+            "{name}: loading, playback or statistics allocated"
+        );
     }
 }
 
