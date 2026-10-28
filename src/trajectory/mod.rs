@@ -291,12 +291,12 @@ fn control_point_bounds(poly: &Poly) -> Interval {
         min: f32::INFINITY,
         max: f32::NEG_INFINITY,
     };
-    // The k-th control point is the sum of binomial(i, k) / binomial(n, k)
-    // times the i-th coefficient, over i from k to n
+    // The k-th control point is the sum of binomial(k, i) / binomial(n, i)
+    // times the i-th coefficient, over i from 0 to k
     for k in 0..=n {
         let mut point = 0.0;
-        for (i, &coeff) in coeffs.iter().enumerate().skip(k) {
-            point += binomial(i, k) / binomial(n, k) * coeff;
+        for (i, &coeff) in coeffs.iter().enumerate().take(k + 1) {
+            point += binomial(k, i) / binomial(n, i) * coeff;
         }
         if point < result.min {
             result.min = point;

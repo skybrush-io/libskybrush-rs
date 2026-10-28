@@ -32,8 +32,7 @@ pub struct RgbwColor {
 /// Converts a float to a color component, truncating it towards zero.
 ///
 /// The callers clamp the value to `[0, 255]` first, as the C library does.
-/// Where the C library would convert NaN (undefined behaviour in C), this
-/// returns zero.
+/// NaN becomes zero.
 #[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
@@ -300,7 +299,7 @@ impl RgbwConversion {
     /// A component of zero means that the white LED does not emit that
     /// channel: the channel does not limit the white level, and white takes
     /// nothing from it. A black reference means that the white LED is not
-    /// used. (Unlike the C library; see `doc/differences-from-c.md`.)
+    /// used.
     #[must_use]
     pub fn reference_color(reference: RgbColor) -> Self {
         Self::reference(reference, None)
@@ -354,7 +353,7 @@ mod tests {
 
     #[test]
     fn white_takes_nothing_from_a_channel_it_does_not_emit() {
-        // Blue stays 50 (the C library gives 49)
+        // Blue stays 50
         let conversion = RgbwConversion::reference_color(RgbColor::new(255, 200, 0));
         assert_eq!(
             RgbColor::new(100, 100, 50).to_rgbw(&conversion),
@@ -364,7 +363,6 @@ mod tests {
 
     #[test]
     fn black_reference_leaves_white_off() {
-        // The C library gives (9, 19, 29, 255)
         let conversion = RgbwConversion::reference_color(RgbColor::BLACK);
         assert_eq!(
             RgbColor::new(10, 20, 30).to_rgbw(&conversion),

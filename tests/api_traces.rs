@@ -164,6 +164,7 @@ fn replay_scenarios(section: &str, golden: &Map<String, Value>) -> Replay {
     match section {
         "colors" => colors::replay(&golden[section]),
         "motion" => motion::replay(&golden[section]),
+        "bounding_boxes" => trajectory::replay_bounding_boxes(&golden[section]),
         _ => Replay::Unimplemented,
     }
 }

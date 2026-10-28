@@ -779,7 +779,6 @@ mod tests {
 
     #[test]
     fn extrema_of_high_degrees_are_not_implemented() {
-        // The C library returns success without a result here
         assert_eq!(
             Poly::new(&[1.0, 2.0, 3.0, 4.0, 5.0]).extrema(),
             Err(PolyError::UnsupportedDegree(4))
@@ -855,7 +854,7 @@ mod tests {
 
     #[test]
     fn cubic_roots_match_the_c_library() {
-        // Printed by sb_poly_solve() of the C library 6.0.0, in its order
+        // Printed by sb_poly_solve() of the C library 6.0.1, in its order
         let cases: [(&[f32], f32, &[f32]); 4] = [
             (&[-15.0, 23.0, -9.0, 1.0], 0.0, &[5.0, 1.0, 3.0]),
             (

@@ -170,7 +170,7 @@ fn booleans_and_nulls_match_exactly() {
 
 #[test]
 fn keys_must_agree_except_the_generator() {
-    let golden = json!({ "a": 1, "b": { "c": 2 }, "generator": "libskybrush 6.0.0" });
+    let golden = json!({ "a": 1, "b": { "c": 2 }, "generator": "libskybrush 6.0.1" });
     let actual = json!({ "b": { "c": 2, "d": 3 }, "generator": "skybrush-rs" });
     assert_eq!(
         differences(&golden, &actual),

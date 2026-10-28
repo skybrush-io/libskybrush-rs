@@ -20,8 +20,8 @@
 set -euo pipefail
 
 LIBSKYBRUSH_URL=https://github.com/skybrush-io/libskybrush.git
-LIBSKYBRUSH_TAG=6.0.0
-LIBSKYBRUSH_COMMIT=ab76b6eff08c0e45747d736c1d9ddec51a76e321
+LIBSKYBRUSH_TAG=6.0.1
+LIBSKYBRUSH_COMMIT=f6b5117c7eac9febf5e4a0118185c8708115974a
 
 SPEC_URL=https://github.com/skybrush-io/file-formats-doc.git
 SPEC_COMMIT=710666990d718873a8d1d45e79f778fefe32f26f
