@@ -2,7 +2,6 @@
 # The list may only shrink; see tests/common/ratchet.rs.
 basic_show_with_yaw/event_list
 basic_show_with_yaw/gcs_light_control_setup
-basic_show_with_yaw/light_program
 basic_show_with_yaw/metadata
 basic_show_with_yaw/num_samples
 basic_show_with_yaw/rth_plan
@@ -10,7 +9,6 @@ basic_show_with_yaw/show_controller
 basic_show_with_yaw/yaw_control
 forward_left_back/event_list
 forward_left_back/gcs_light_control_setup
-forward_left_back/light_program
 forward_left_back/metadata
 forward_left_back/num_samples
 forward_left_back/rth_plan
@@ -18,7 +16,6 @@ forward_left_back/show_controller
 forward_left_back/yaw_control
 forward_left_back_v2/event_list
 forward_left_back_v2/gcs_light_control_setup
-forward_left_back_v2/light_program
 forward_left_back_v2/metadata
 forward_left_back_v2/num_samples
 forward_left_back_v2/rth_plan
@@ -26,7 +23,6 @@ forward_left_back_v2/show_controller
 forward_left_back_v2/yaw_control
 hover_3m_with_gcs_control_block/event_list
 hover_3m_with_gcs_control_block/gcs_light_control_setup
-hover_3m_with_gcs_control_block/light_program
 hover_3m_with_gcs_control_block/metadata
 hover_3m_with_gcs_control_block/num_samples
 hover_3m_with_gcs_control_block/rth_plan
@@ -34,7 +30,6 @@ hover_3m_with_gcs_control_block/show_controller
 hover_3m_with_gcs_control_block/yaw_control
 hover_3m_with_rth_plan/event_list
 hover_3m_with_rth_plan/gcs_light_control_setup
-hover_3m_with_rth_plan/light_program
 hover_3m_with_rth_plan/metadata
 hover_3m_with_rth_plan/num_samples
 hover_3m_with_rth_plan/rth_plan
@@ -42,7 +37,6 @@ hover_3m_with_rth_plan/show_controller
 hover_3m_with_rth_plan/yaw_control
 light_program_with_wait_until_cmd/event_list
 light_program_with_wait_until_cmd/gcs_light_control_setup
-light_program_with_wait_until_cmd/light_program
 light_program_with_wait_until_cmd/metadata
 light_program_with_wait_until_cmd/num_samples
 light_program_with_wait_until_cmd/rth_plan
@@ -50,7 +44,6 @@ light_program_with_wait_until_cmd/show_controller
 light_program_with_wait_until_cmd/yaw_control
 multiple_vertical_landing_segments/event_list
 multiple_vertical_landing_segments/gcs_light_control_setup
-multiple_vertical_landing_segments/light_program
 multiple_vertical_landing_segments/metadata
 multiple_vertical_landing_segments/num_samples
 multiple_vertical_landing_segments/rth_plan
@@ -58,7 +51,6 @@ multiple_vertical_landing_segments/show_controller
 multiple_vertical_landing_segments/yaw_control
 pyro_events/event_list
 pyro_events/gcs_light_control_setup
-pyro_events/light_program
 pyro_events/metadata
 pyro_events/num_samples
 pyro_events/rth_plan
@@ -66,7 +58,6 @@ pyro_events/show_controller
 pyro_events/yaw_control
 real_show/event_list
 real_show/gcs_light_control_setup
-real_show/light_program
 real_show/metadata
 real_show/num_samples
 real_show/rth_plan

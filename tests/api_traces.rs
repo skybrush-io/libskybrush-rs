@@ -22,6 +22,8 @@ mod colors;
 mod common;
 #[path = "api_traces/edit.rs"]
 mod edit;
+#[path = "api_traces/lights.rs"]
+mod lights;
 #[path = "api_traces/motion.rs"]
 mod motion;
 #[path = "api_traces/stats.rs"]
@@ -33,6 +35,7 @@ use common::ratchet::Ratchet;
 use common::{Replay, oracle, record_section};
 use serde_json::{Map, Value};
 use skybrush::formats::binary::BinaryFile;
+use skybrush::lights::LightProgram;
 use skybrush::trajectory::Trajectory;
 
 /// Keys of the trace of a show file that are inputs or informational. `end`
@@ -161,6 +164,10 @@ fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Re
         "cuts" => edit::replay_cuts(trajectory().as_ref(), &golden[section]),
         "landings" => edit::replay_landings(trajectory().as_ref(), &golden[section]),
         "cleared_view" => edit::replay_cleared_view(trajectory()),
+        "light_player" => {
+            let program = LightProgram::from_binary_file(&file).expect("valid light program");
+            lights::replay_light_player(program.as_ref())
+        }
         _ => Replay::Unimplemented,
     }
 }
@@ -171,6 +178,7 @@ fn replay_scenarios(section: &str, golden: &Map<String, Value>) -> Replay {
     match section {
         "colors" => colors::replay(&golden[section]),
         "motion" => motion::replay(&golden[section]),
+        "light_programs" => lights::replay_scenarios(&golden[section]),
         "builder" => builder::replay(&golden[section]),
         "stats_scenarios" => stats::replay_scenarios(&golden[section]),
         "bounding_boxes" => trajectory::replay_bounding_boxes(&golden[section]),

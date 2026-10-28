@@ -5,6 +5,7 @@
 
 pub mod compare;
 pub mod errors;
+pub mod lights;
 pub mod oracle;
 pub mod ratchet;
 pub mod values;

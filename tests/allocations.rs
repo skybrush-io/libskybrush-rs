@@ -23,6 +23,7 @@ use std::hint::black_box;
 
 use common::oracle;
 use skybrush::formats::binary::BinaryFile;
+use skybrush::lights::{LightPlayer, LightProgram};
 use skybrush::trajectory::{Trajectory, TrajectoryPlayer, TrajectoryStatsCalculator};
 
 /// Counts the allocations of each thread, since tests run in parallel.
@@ -90,6 +91,31 @@ fn trajectories_are_loaded_and_played_without_allocating() {
         assert_eq!(
             count, 0,
             "{name}: loading, playback or statistics allocated"
+        );
+    }
+}
+
+#[test]
+fn light_programs_are_loaded_and_played_without_allocating() {
+    for name in [
+        "real_show",
+        "light_program_with_wait_until_cmd",
+        "basic_show_with_yaw",
+    ] {
+        let show = oracle::read_bytes(&format!("format/{name}.skyb"));
+        let count = allocations_of(|| {
+            let file = BinaryFile::new(&show).unwrap();
+            let program = LightProgram::from_binary_file(&file).unwrap().unwrap();
+            let mut player = LightPlayer::new(&program);
+            // Forwards, backwards and after the end
+            for step in (0..=700).chain((0..=700).rev()) {
+                black_box(player.color_at(step * 1000));
+                black_box(player.next_timestamp());
+            }
+        });
+        assert_eq!(
+            count, 0,
+            "{name}: loading or playing the light program allocated"
         );
     }
 }

@@ -33,6 +33,7 @@ compare it; see `NOT_APPLICABLE` in `tests/api_traces.rs`.
 Light program durations are in frames of 20 ms, with 32-bit frame counts, so a
 wait can last about 8.6 × 10^10 ms. The C library computes milliseconds in an
 `unsigned long`, which has 32 bits on the flight controller and wraps there.
-The crate uses `u64` milliseconds. (Not ported yet.) Fixing this in C needs
+The crate uses `u64` milliseconds (`LightPlayer::seek` and
+`LightPlayer::color_at` take `u64` timestamps). Fixing this in C needs
 a change of the public API (`unsigned long` appears in the signatures of
 `lights.h`), so it is left for the next major version of the C library.

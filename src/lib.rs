@@ -14,6 +14,7 @@ pub mod basic_types;
 pub mod colors;
 mod crc32;
 pub mod formats;
+pub mod lights;
 pub mod motion;
 #[allow(
     dead_code,

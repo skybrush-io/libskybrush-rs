@@ -6,6 +6,7 @@
 //! mapped here.
 
 use skybrush::formats::binary::BinaryFileError;
+use skybrush::lights::LightProgramError;
 use skybrush::trajectory::{
     LandingError, TrajectoryBuilderError, TrajectoryError, TrajectoryStatsError,
 };
@@ -65,6 +66,15 @@ impl ErrorName for LandingError {
         match self {
             Self::MissingLandingTime | Self::InvalidVelocity | Self::NotBelow => "EINVAL",
             Self::Builder(err) => err.error_name(),
+        }
+    }
+}
+
+impl ErrorName for LightProgramError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::File(err) => err.error_name(),
+            Self::OutOfMemory => "ENOMEM",
         }
     }
 }

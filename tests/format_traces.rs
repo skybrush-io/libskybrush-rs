@@ -12,6 +12,8 @@
 )]
 
 mod common;
+#[path = "format_traces/light_program.rs"]
+mod light_program;
 #[path = "format_traces/stats.rs"]
 mod stats;
 #[path = "format_traces/trajectory.rs"]
@@ -21,6 +23,7 @@ use common::ratchet::Ratchet;
 use common::{Replay, oracle, record_section};
 use serde_json::{Map, Value};
 use skybrush::formats::binary::BinaryFile;
+use skybrush::lights::LightProgram;
 use skybrush::trajectory::Trajectory;
 
 /// Keys of a trace that are inputs or informational, not computed.
@@ -74,6 +77,10 @@ fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Re
         "trajectory" => {
             let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");
             trajectory::replay(trajectory.as_ref(), golden)
+        }
+        "light_program" => {
+            let program = LightProgram::from_binary_file(&file).expect("valid light program");
+            light_program::replay(program.as_ref(), golden)
         }
         "stats" => {
             let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");

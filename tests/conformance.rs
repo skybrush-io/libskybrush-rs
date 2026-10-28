@@ -16,11 +16,13 @@ mod common;
 use common::Replay;
 use common::compare::{Comparator, Tolerance, Tolerances};
 use common::errors::{ErrorName, result_name};
+use common::lights;
 use common::oracle;
 use common::ratchet::{Failure, Ratchet};
 use common::values;
 use serde_json::{Map, Value, json};
 use skybrush::formats::binary::{BinaryBlock, BinaryBlockType, BinaryFile};
+use skybrush::lights::{LightPlayer, LightProgram};
 use skybrush::trajectory::{Trajectory, TrajectoryPlayer};
 
 /// Names of the columns of the tuples in the cases; the suffixes of the names
@@ -96,6 +98,7 @@ fn load_block(bytes: &[u8], block_type: &str, golden: &Map<String, Value>) -> Re
 fn load_body(block_type: &str, block: BinaryBlock<'_>, golden: &Map<String, Value>) -> Replay {
     match block_type {
         "trajectory" => Replay::Present(load_trajectory(block.body, golden)),
+        "light_program" => Replay::Present(load_light_program(block.body, golden)),
         _ => Replay::Unimplemented,
     }
 }
@@ -121,6 +124,49 @@ fn load_trajectory(body: &[u8], golden: &Map<String, Value>) -> Value {
             json!([time_ms, position.x, position.y, position.z])
         });
         result.insert("positions".into(), rows.collect());
+    }
+    Value::Object(result)
+}
+
+/// How long the C conformance test lets a light program run before it
+/// concludes that it never ends, in milliseconds.
+const LIGHT_PROGRAM_HORIZON_MSEC: u64 = 10_000_000;
+
+fn load_light_program(body: &[u8], golden: &Map<String, Value>) -> Value {
+    let program = LightProgram::from_buffer(body);
+    let mut result = Map::new();
+    result.insert("result".into(), json!("SUCCESS"));
+    if let Some(colors) = golden.get("colors").and_then(Value::as_array) {
+        let times: Vec<u64> = colors
+            .iter()
+            .map(|row| u64::from(values::u32_of(&row[0])))
+            .collect();
+        let mut player = LightPlayer::new(&program);
+        let rows: Vec<Value> = times
+            .iter()
+            .map(|&t| {
+                let color = player.color_at(t);
+                json!([t, color.red, color.green, color.blue])
+            })
+            .collect();
+        // The colors must not depend on the order of the queries; a
+        // difference shows up as an unexpected key
+        let reversed: Vec<Value> = times
+            .iter()
+            .rev()
+            .map(|&t| {
+                let color = player.color_at(t);
+                json!([t, color.red, color.green, color.blue])
+            })
+            .collect();
+        if reversed.iter().rev().ne(rows.iter()) {
+            result.insert("colors_in_reverse_order".into(), reversed.into());
+        }
+        result.insert("colors".into(), rows.into());
+    }
+    if golden.contains_key("ends_at_ms") {
+        let end = lights::end_msec(&program, LIGHT_PROGRAM_HORIZON_MSEC);
+        result.insert("ends_at_ms".into(), json!(end));
     }
     Value::Object(result)
 }
