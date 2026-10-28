@@ -11,6 +11,8 @@ use skybrush::gcs_light_control::GcsLightControlSetupError;
 use skybrush::lights::LightProgramError;
 use skybrush::metadata::ShowMetadataError;
 use skybrush::rth_plan::{RthPlanError, RthTrajectoryError};
+use skybrush::screenplay::ScreenplayError;
+use skybrush::time_axis::TimeAxisError;
 use skybrush::trajectory::{
     LandingError, TrajectoryBuilderError, TrajectoryError, TrajectoryStatsError,
 };
@@ -141,6 +143,31 @@ impl ErrorName for RthTrajectoryError {
             Self::InvalidDuration => "EINVAL",
             Self::Builder(err) => err.error_name(),
             Self::Trajectory(err) => err.error_name(),
+        }
+    }
+}
+
+impl ErrorName for TimeAxisError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::InvalidSegment | Self::IndexOutOfRange | Self::InvalidOrigin => "EINVAL",
+            Self::OutOfMemory => "ENOMEM",
+        }
+    }
+}
+
+impl ErrorName for ScreenplayError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::MissingTrajectory => "ENOENT",
+            Self::InvalidDuration => "EINVAL",
+            Self::File(err) => err.error_name(),
+            Self::Trajectory(err) => err.error_name(),
+            Self::LightProgram(err) => err.error_name(),
+            Self::YawControl(err) => err.error_name(),
+            Self::EventList(err) => err.error_name(),
+            Self::RthPlan(err) => err.error_name(),
+            Self::OutOfMemory => "ENOMEM",
         }
     }
 }

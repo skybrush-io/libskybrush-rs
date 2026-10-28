@@ -191,6 +191,10 @@ not be idiomatic Rust:
 | `sb_trajectory_update_from_builder(&t, &builder)` | `builder.build()` | A builder finishes with `build()`, which consumes it |
 | `sb_event_list_get_ptr(&t, i)`, `sb_event_list_get_ptr_const(&t, i)` | `t.get_mut(i)`, `t.get(i)` | The names of slices and `Vec` |
 | `sb_rth_plan_entry_clear(&e, plan, t)` | `RthPlanEntry::new(plan, t)` | It sets every field, so it creates an entry rather than clearing one |
+| `sb_screenplay_get_scene_ptr(&s, i)` | `s.scene(i)`, `s.scene_mut(i)` | Scenes are returned by reference, not by pointer |
+| `sb_screenplay_get_scene_ptr_at_time_msec(&s, t, &i)` | `s.scene_at_time_msec(t)` | Returns the index and the scene together |
+| `sb_time_axis_map_ex(&a, t, &rate)` | `a.map_with_rate(t)` | Returns the warped time and the rate together |
+| `sb_time_axis_swap(&a, &b)` | `core::mem::swap(&mut a, &mut b)` | Not needed in Rust |
 
 Fields keep their C names too. A C name that is a Rust keyword is prefixed
 with the name of the type: the `type` of `sb_event_t` is `Event::event_type`.

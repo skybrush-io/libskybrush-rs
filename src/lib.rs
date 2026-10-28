@@ -23,5 +23,7 @@ pub mod palette;
 mod parsing;
 pub mod poly;
 pub mod rth_plan;
+pub mod screenplay;
+pub mod time_axis;
 pub mod trajectory;
 pub mod yaw_control;

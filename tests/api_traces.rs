@@ -30,8 +30,12 @@ mod lights;
 mod motion;
 #[path = "api_traces/rth_plan.rs"]
 mod rth_plan;
+#[path = "api_traces/screenplay.rs"]
+mod screenplay;
 #[path = "api_traces/stats.rs"]
 mod stats;
+#[path = "api_traces/time_axis.rs"]
+mod time_axis;
 #[path = "api_traces/trajectory.rs"]
 mod trajectory;
 #[path = "api_traces/yaw_control.rs"]
@@ -205,6 +209,9 @@ fn replay_scenarios(section: &str, golden: &Map<String, Value>) -> Replay {
         "event_lists" => events::replay_scenarios(&golden[section]),
         "rth_conversions" => rth_plan::replay_conversions(&golden[section]),
         "empty_rth_plan" => rth_plan::replay_empty_plan(),
+        "screenplay_queries" => screenplay::replay_queries(&golden[section]),
+        "time_axes" => time_axis::replay_time_axes(&golden[section]),
+        "time_axis_editing" => time_axis::replay_editing(&golden[section]),
         "constant_yaw" => yaw_control::replay_constant_yaw(&golden[section]),
         _ => Replay::Unimplemented,
     }
