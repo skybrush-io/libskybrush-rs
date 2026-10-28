@@ -62,8 +62,28 @@ temperature) is undefined behaviour in C. In Rust, the component is zero.
 higher degrees, it returns `SB_SUCCESS` without writing its result, although
 its documentation says that it returns `SB_EUNIMPLEMENTED`. `Poly::extrema`
 returns `PolyError::UnsupportedDegree`, as documented; Rust has no way to
-succeed without a result. Trajectories in show files have segments of degree at
-most 3, so this does not affect them.
+succeed without a result.
+
+## Trajectories
+
+### Bounding boxes of segments of degree 7
+
+`sb_trajectory_get_axis_aligned_bounding_box` ignores the error of
+`sb_poly_get_extrema`. Segments with a Bézier curve of degree 7 along an axis
+have no extrema, so the C library extends the box with whatever interval was
+left over from the previous axis or segment, or with uninitialized memory if
+this is the first one.
+
+`Trajectory::axis_aligned_bounding_box` extends the box with the smallest and
+largest Bézier control point of the axis instead. A Bézier curve lies within
+the convex hull of its control points, so this is a true bounding box, but it
+may be larger than the tightest one. Segments of degree at most 3 (all
+segments that Skybrush generates) are bounded exactly, as in C. Computing the
+exact extrema of degree-7 segments would need a numerical root finder for a
+polynomial of degree 6, which is not worth it for such rare segments.
+
+The oracle does not check this: the only trajectory with degree-7 segments is
+in the conformance case `trajectory-poly7`, which checks positions only.
 
 ## Show files
 
