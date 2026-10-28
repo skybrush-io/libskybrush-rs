@@ -244,14 +244,20 @@ impl Executor {
                 }
             }
             opcodes::LOOP_END => {
-                if self.loops.innermost_is_infinite()
-                    && self
-                        .loops
-                        .current_iteration_has_no_duration(self.cumulative_duration)
+                if self
+                    .loops
+                    .current_iteration_has_no_duration(self.cumulative_duration)
                 {
-                    // An infinite loop whose body takes no time would keep
-                    // the executor busy forever
-                    self.ended = true;
+                    // An iteration that takes no time sets the same colors at
+                    // the same instant as the next one would, so the rest of
+                    // the iterations are skipped. Repeating them could keep
+                    // the executor busy for a long time with nested loops, or
+                    // forever with an infinite loop, which is rejected.
+                    if self.loops.innermost_is_infinite() {
+                        self.ended = true;
+                    } else {
+                        self.loops.leave();
+                    }
                 } else if let Some(start) = self.loops.end(self.cumulative_duration) {
                     self.position = start;
                 }
@@ -444,6 +450,11 @@ impl LoopStack {
                 Some(item.start)
             }
         }
+    }
+
+    /// Leaves the innermost loop, skipping its remaining iterations.
+    fn leave(&mut self) {
+        self.depth = self.depth.saturating_sub(1);
     }
 
     fn innermost(&self) -> Option<&LoopStackItem> {
