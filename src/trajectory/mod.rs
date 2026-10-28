@@ -5,6 +5,8 @@
 //! [`TrajectoryPlayer`]. A trajectory read from a show file in memory borrows
 //! its bytes from the show file.
 
+mod builder;
+mod edit;
 mod player;
 mod segment;
 mod stats;
@@ -13,6 +15,8 @@ use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use core::{error, fmt};
 
+pub use builder::{TrajectoryBuilder, TrajectoryBuilderError};
+pub use edit::LandingError;
 pub use player::{TrajectoryPlayer, TrajectoryPlayerState};
 pub use segment::TrajectorySegment;
 pub use stats::{
@@ -70,9 +74,10 @@ impl From<BinaryFileError> for TrajectoryError {
 /// The bytes of the trajectory are borrowed when it is read from a show file
 /// in memory, and owned when they were built or modified.
 ///
-/// Modifying a borrowed trajectory (e.g. cutting it or replacing its end with
-/// a landing) copies all of its bytes, like the C library does. An alternative
-/// that would save that memory: keep borrowing the unmodified segments, and
+/// Cutting a borrowed trajectory at the boundary of a segment narrows the
+/// borrowed bytes. Other modifications (cutting within a segment, replacing
+/// the end with a landing) copy the bytes that are kept, like the C library
+/// does. An alternative that would save that memory: keep borrowing the unmodified segments, and
 /// store the few modified or appended segments at the end inline, in a small
 /// fixed buffer. A cut rewrites at most one segment and a landing appends one,
 /// so this would need no allocation, at the cost of a more complex player.

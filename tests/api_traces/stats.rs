@@ -2,8 +2,11 @@
 //! sections of an API trace.
 
 use serde_json::{Map, Value, json};
-use skybrush::trajectory::{Trajectory, TrajectoryStatComponents, TrajectoryStatsCalculator};
+use skybrush::trajectory::{
+    Trajectory, TrajectoryBuilder, TrajectoryStatComponents, TrajectoryStatsCalculator,
+};
 
+use crate::builder::replay_ops;
 use crate::common::Replay;
 use crate::common::errors::result_name;
 use crate::common::values::{self, f32_of};
@@ -111,4 +114,69 @@ pub fn replay_proposed_landing_times(
             })
             .collect(),
     )
+}
+
+/// The `stats_scenarios` section of `scenarios.json`: statistics of
+/// trajectories built from the recorded operations.
+pub fn replay_scenarios(golden: &Value) -> Replay {
+    let scenarios = golden.as_array().expect("stats scenarios");
+    Replay::Present(scenarios.iter().map(stats_scenario).collect())
+}
+
+fn stats_scenario(golden: &Value) -> Value {
+    let mut builder = TrajectoryBuilder::new(1).expect("a valid scale");
+    let ops = replay_ops(&mut builder, &golden["ops"]);
+    let trajectory = builder.build().expect("a valid trajectory");
+
+    let calc = TrajectoryStatsCalculator::new(1000.0);
+    let result = calc.run(&trajectory);
+    let mut default_calculator = json!({
+        "takeoff_speed_mm_s": calc.takeoff_speed,
+        "acceleration_mm_s2": calc.acceleration,
+        "min_ascent_mm": calc.min_ascent,
+        "preferred_descent_mm": calc.preferred_descent,
+        "verticality_threshold_mm": calc.verticality_threshold,
+        "result": result_name(&result),
+    });
+    default_calculator["stats"] = values::stats(&result.unwrap_or_default());
+
+    let cases = golden["stats"].as_array().expect("settings");
+    let stats: Vec<Value> = cases
+        .iter()
+        .map(|case| {
+            let calc = TrajectoryStatsCalculator {
+                components: TrajectoryStatComponents::ALL,
+                takeoff_speed: f32_of(&case["takeoff_speed_mm_s"]),
+                acceleration: f32_of(&case["acceleration_mm_s2"]),
+                min_ascent: f32_of(&case["min_ascent_mm"]),
+                preferred_descent: f32_of(&case["preferred_descent_mm"]),
+                verticality_threshold: f32_of(&case["verticality_threshold_mm"]),
+            };
+            let result = calc.run(&trajectory);
+            // The settings are inputs, copied from the golden case
+            let mut actual: Map<String, Value> = [
+                "settings",
+                "takeoff_speed_mm_s",
+                "acceleration_mm_s2",
+                "min_ascent_mm",
+                "preferred_descent_mm",
+                "verticality_threshold_mm",
+            ]
+            .into_iter()
+            .map(|key| (key.to_owned(), case[key].clone()))
+            .collect();
+            actual.insert("result".to_owned(), json!(result_name(&result)));
+            if let Ok(stats) = result {
+                actual.insert("stats".to_owned(), values::stats(&stats));
+            }
+            Value::Object(actual)
+        })
+        .collect();
+
+    json!({
+        "scenario": golden["scenario"],
+        "ops": ops,
+        "default_calculator": default_calculator,
+        "stats": stats,
+    })
 }

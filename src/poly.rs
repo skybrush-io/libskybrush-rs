@@ -598,6 +598,31 @@ impl Poly4D {
     }
 }
 
+/// The control points of the part of a Bézier curve from its start to the
+/// given ratio, in `[0, 1]`, with De Casteljau's algorithm. At most
+/// [`MAX_POLY_COEFFS`] control points are used.
+pub(crate) fn bezier_cut_at(points: &[f32], ratio: f32) -> [f32; MAX_POLY_COEFFS] {
+    let mut temp = [0.0; MAX_POLY_COEFFS];
+    for (slot, &point) in temp.iter_mut().zip(points) {
+        *slot = point;
+    }
+    let n = points.len().min(MAX_POLY_COEFFS);
+    let mut result = [0.0; MAX_POLY_COEFFS];
+    for (i, slot) in result.iter_mut().enumerate().take(n) {
+        if i > 0 {
+            for j in 0..n - i {
+                if let (Some(&a), Some(&b)) = (temp.get(j), temp.get(j + 1))
+                    && let Some(slot) = temp.get_mut(j)
+                {
+                    *slot = (1.0 - ratio) * a + ratio * b;
+                }
+            }
+        }
+        *slot = temp[0];
+    }
+    result
+}
+
 #[cfg(test)]
 mod tests {
     // Test vectors from test/unit/test_poly.c of the C library.
@@ -665,6 +690,16 @@ mod tests {
         let poly = Poly::linear(eps / 2.0, 1.0, 1.0 + eps);
         assert_eq!(poly.eval(0.0), 1.0);
         assert_eq!(poly.eval(eps / 2.0), 1.0);
+    }
+
+    #[test]
+    fn bezier_cut() {
+        // The first half of a cubic Bézier curve
+        let cut = bezier_cut_at(&[0.0, 4.0, 8.0, 12.0], 0.5);
+        assert_eq!(&cut[..4], &[0.0, 2.0, 4.0, 6.0]);
+        let cut = bezier_cut_at(&[0.0, 0.0, 5.0, 5.0], 0.5);
+        assert_eq!(&cut[..4], &[0.0, 0.0, 1.25, 2.5]);
+        assert_eq!(&bezier_cut_at(&[3.0, 7.0], 0.25)[..2], &[3.0, 4.0]);
     }
 
     #[test]

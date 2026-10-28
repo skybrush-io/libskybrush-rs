@@ -6,7 +6,9 @@
 //! mapped here.
 
 use skybrush::formats::binary::BinaryFileError;
-use skybrush::trajectory::{TrajectoryError, TrajectoryStatsError};
+use skybrush::trajectory::{
+    LandingError, TrajectoryBuilderError, TrajectoryError, TrajectoryStatsError,
+};
 
 /// The name of the C error code that corresponds to an error.
 pub trait ErrorName {
@@ -41,6 +43,28 @@ impl ErrorName for TrajectoryStatsError {
             | Self::InvalidTakeoffSpeed
             | Self::InvalidMinAscent
             | Self::InvalidPreferredDescent => "EINVAL",
+        }
+    }
+}
+
+impl ErrorName for TrajectoryBuilderError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::InvalidScale
+            | Self::ZeroDuration
+            | Self::DurationTooLong
+            | Self::CoordinateOutOfRange => "EINVAL",
+            Self::StartPositionAlreadyUsed => "FAILURE",
+            Self::OutOfMemory => "ENOMEM",
+        }
+    }
+}
+
+impl ErrorName for LandingError {
+    fn error_name(&self) -> &'static str {
+        match self {
+            Self::MissingLandingTime | Self::InvalidVelocity | Self::NotBelow => "EINVAL",
+            Self::Builder(err) => err.error_name(),
         }
     }
 }

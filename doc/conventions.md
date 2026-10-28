@@ -32,8 +32,10 @@ submodules follow the source files of the C library where that is natural.
 | `screenplay` | `screenplay.h`, `src/screenplay/` | Scenes and screenplays |
 | `control` | `control.h` | The show controller |
 
-Where the public helpers of `utils.h` (Bézier cuts, scaling) end up is decided
-with the trajectory layer.
+`sb_bezier_cut_at` from `utils.h` is a private helper of `poly`, since only
+cutting trajectories needs it. Where the other public helpers of `utils.h`
+(scaling, expanding bounding boxes) end up is decided with the layer that
+needs them.
 
 The following parts of the C library have no counterpart, because Rust
 provides them:
@@ -103,8 +105,9 @@ and copied only when there is no other way.
   `Copy`. Types that hold or view bulk data do not implement `Clone` unless
   cloning is cheap (a view or an `Rc`).
 
-Modified trajectories copy all their bytes, like in the C library (`Cow`).
-A possible alternative that saves that memory, at the cost of a more complex
+Cutting a trajectory at the boundary of a segment narrows the borrowed
+bytes. Other modifications (a cut within a segment, a landing) copy the bytes
+that are kept, like in the C library (`Cow`). A possible alternative that saves that memory, at the cost of a more complex
 player: keep borrowing the unmodified segments, and store the few rewritten or
 appended segments at the end (a cut rewrites one, a landing appends one) in a
 small inline buffer. See the documentation of `Trajectory`.
@@ -180,7 +183,12 @@ On top of that, the following rules apply, and only these:
 | output arguments and an error code | the return value: `Result`, `Option`, or the value |
 
 Setters (`set_X`), predicates (`is_X`, `has_X`) and everything else keep their
-C names.
+C names, except for the functions listed here, whose names by the rules would
+not be idiomatic Rust:
+
+| C | Rust | Why |
+|---|---|---|
+| `sb_trajectory_update_from_builder(&t, &builder)` | `builder.build()` | A builder finishes with `build()`, which consumes it |
 
 ## Paths
 

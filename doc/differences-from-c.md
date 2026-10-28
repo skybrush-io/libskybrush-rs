@@ -14,8 +14,13 @@ are not listed; see `doc/conventions.md`.
 
 In C, a trajectory or light program loaded from a show file in memory is a
 view into the show file, and clearing or cutting it writes through to the show
-file. In Rust, borrowed data is immutable; operations that would modify it
-produce owned data instead (see `CLAUDE.md`).
+file. In Rust, borrowed data is immutable (see `CLAUDE.md`):
+
+- `Trajectory::clear` makes the trajectory empty and stops borrowing the show
+  file. Its scale becomes 1, as for any empty trajectory; in C, a cleared view
+  has a scale of 0.
+- `Trajectory::cut_at` narrows the borrowed bytes if it cuts at the boundary of
+  a segment, and copies the bytes up to the cut otherwise.
 
 The API traces record how many bytes clearing a trajectory changed in the
 show file (`cleared_view.bytes_changed_in_show_file`). The API runner does not

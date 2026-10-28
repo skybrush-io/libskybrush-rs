@@ -20,6 +20,17 @@ pub struct TrajectoryPlayerState {
 }
 
 impl TrajectoryPlayerState {
+    /// Offset of the current segment in the bytes of the trajectory.
+    pub(crate) const fn start(&self) -> usize {
+        self.start
+    }
+
+    /// Length of the current segment in the bytes; zero after the end of the
+    /// trajectory.
+    pub(crate) const fn length(&self) -> usize {
+        self.length
+    }
+
     /// The segment of the state.
     #[must_use]
     pub const fn segment(&self) -> &TrajectorySegment {

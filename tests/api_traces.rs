@@ -15,9 +15,13 @@
     clippy::indexing_slicing
 )]
 
+#[path = "api_traces/builder.rs"]
+mod builder;
 #[path = "api_traces/colors.rs"]
 mod colors;
 mod common;
+#[path = "api_traces/edit.rs"]
+mod edit;
 #[path = "api_traces/motion.rs"]
 mod motion;
 #[path = "api_traces/stats.rs"]
@@ -154,6 +158,9 @@ fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Re
         "proposed_landing_times" => {
             stats::replay_proposed_landing_times(trajectory().as_ref(), &golden[section])
         }
+        "cuts" => edit::replay_cuts(trajectory().as_ref(), &golden[section]),
+        "landings" => edit::replay_landings(trajectory().as_ref(), &golden[section]),
+        "cleared_view" => edit::replay_cleared_view(trajectory()),
         _ => Replay::Unimplemented,
     }
 }
@@ -164,6 +171,8 @@ fn replay_scenarios(section: &str, golden: &Map<String, Value>) -> Replay {
     match section {
         "colors" => colors::replay(&golden[section]),
         "motion" => motion::replay(&golden[section]),
+        "builder" => builder::replay(&golden[section]),
+        "stats_scenarios" => stats::replay_scenarios(&golden[section]),
         "bounding_boxes" => trajectory::replay_bounding_boxes(&golden[section]),
         _ => Replay::Unimplemented,
     }

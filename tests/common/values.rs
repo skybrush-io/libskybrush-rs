@@ -1,8 +1,8 @@
 //! Conversions between the values of the crate and the values of the oracle.
 
 use serde_json::{Map, Value, json};
-use skybrush::basic_types::{Interval, Vector3WithYaw};
-use skybrush::trajectory::TrajectoryStats;
+use skybrush::basic_types::{Interval, Vector3, Vector3WithYaw};
+use skybrush::trajectory::{Trajectory, TrajectoryPlayer, TrajectoryStats};
 
 /// A position or another vector, as `[x, y, z]`. The yaw is not recorded.
 /// Non-finite components become `null`.
@@ -24,6 +24,45 @@ pub fn vector3_with_yaw_of(value: &Value) -> Vector3WithYaw {
         z: component(2),
         yaw: component(3),
     }
+}
+
+/// A vector recorded as `[x, y, z]`.
+pub fn vector3_of(value: &Value) -> Vector3 {
+    Vector3 {
+        x: f32_of(&value[0]),
+        y: f32_of(&value[1]),
+        z: f32_of(&value[2]),
+    }
+}
+
+/// The positions and velocities along a trajectory every 100 ms, from
+/// `from_msec` rounded down to a multiple of 100 ms, up to `to_msec`, as the
+/// generators of the C library record them.
+pub fn trajectory_samples(
+    trajectory: &Trajectory<'_>,
+    from_msec: u32,
+    to_msec: u32,
+) -> Map<String, Value> {
+    const INTERVAL_MSEC: u32 = 100;
+    let from_msec = from_msec - from_msec % INTERVAL_MSEC;
+    let times: Vec<f32> = (from_msec..=to_msec)
+        .step_by(INTERVAL_MSEC as usize)
+        .map(msec_to_sec)
+        .collect();
+    let mut player = TrajectoryPlayer::new(trajectory);
+    let positions: Value = times
+        .iter()
+        .map(|&t| vector3(player.position_at(t)))
+        .collect();
+    let velocities: Value = times
+        .iter()
+        .map(|&t| vector3(player.velocity_at(t)))
+        .collect();
+    let mut result = Map::new();
+    result.insert("samples_from_ms".to_owned(), json!(from_msec));
+    result.insert("position_mm".to_owned(), positions);
+    result.insert("velocity_mm_s".to_owned(), velocities);
+    result
 }
 
 /// An interval, as `[min, max]`.
@@ -105,6 +144,16 @@ pub fn f32_of(value: &Value) -> f32 {
 )]
 pub fn to_f32(value: f64) -> f32 {
     value as f32
+}
+
+/// Milliseconds from a float, truncated like a cast to `uint32_t` in C.
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "the conversion of the C library"
+)]
+pub fn float_to_msec(msec: f32) -> u32 {
+    msec as u32
 }
 
 pub fn u32_of(value: &Value) -> u32 {

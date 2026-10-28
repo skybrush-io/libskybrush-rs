@@ -174,6 +174,16 @@ impl TrajectorySegment {
         self.end
     }
 
+    /// The control points of the segment along an axis (0, 1 or 2 for X, Y
+    /// or Z), including the start point.
+    pub(crate) fn control_points(&self, axis: usize) -> &[f32] {
+        let count = self.num_points.get(axis).copied().unwrap_or(0);
+        self.points
+            .get(axis)
+            .and_then(|points| points.get(..count))
+            .unwrap_or_default()
+    }
+
     /// The polynomial of the segment. Its `[0, 1]` interval is mapped to the
     /// time interval of the segment.
     pub fn poly(&mut self) -> &Poly4D {
