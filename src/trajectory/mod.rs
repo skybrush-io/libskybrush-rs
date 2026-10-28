@@ -10,7 +10,7 @@ mod segment;
 
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
-use core::fmt;
+use core::{error, fmt};
 
 pub use player::{TrajectoryPlayer, TrajectoryPlayerState};
 pub use segment::TrajectorySegment;
@@ -45,8 +45,8 @@ impl fmt::Display for TrajectoryError {
     }
 }
 
-impl core::error::Error for TrajectoryError {
-    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+impl error::Error for TrajectoryError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Self::Corrupted => None,
             Self::File(err) => Some(err),

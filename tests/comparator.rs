@@ -8,6 +8,8 @@
 
 mod common;
 
+use std::{env, fs};
+
 use common::compare::{Comparator, Tolerances};
 use common::oracle;
 use serde_json::{Value, json};
@@ -227,9 +229,9 @@ fn sections_compare_like_whole_traces() {
 #[test]
 #[ignore = "a tool, run on demand"]
 fn compare_files() {
-    let var = |name: &str| std::env::var(name).unwrap_or_else(|_| panic!("{name} is not set"));
+    let var = |name: &str| env::var(name).unwrap_or_else(|_| panic!("{name} is not set"));
     let read = |path: String| -> Value {
-        serde_json::from_slice(&std::fs::read(&path).unwrap_or_else(|err| panic!("{path}: {err}")))
+        serde_json::from_slice(&fs::read(&path).unwrap_or_else(|err| panic!("{path}: {err}")))
             .unwrap_or_else(|err| panic!("{path}: {err}"))
     };
     let tolerances = oracle::read_tolerances(&var("COMPARE_TOLERANCES"));

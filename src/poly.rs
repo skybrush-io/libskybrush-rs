@@ -10,8 +10,8 @@
 )]
 
 use core::f32::consts::PI;
-use core::fmt;
 use core::ops::Deref;
+use core::{error, fmt};
 
 use libm::{atan2f, cbrtf, cosf, sqrtf};
 
@@ -49,7 +49,7 @@ impl fmt::Display for PolyError {
     }
 }
 
-impl core::error::Error for PolyError {}
+impl error::Error for PolyError {}
 
 /// The real roots of a polynomial of degree at most 3.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]

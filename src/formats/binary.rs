@@ -5,7 +5,8 @@
 //! parser validates the header and the checksum when it is created, and gives
 //! access to the bodies of the blocks as views into the show file.
 
-use core::fmt;
+use core::iter::FusedIterator;
+use core::{error, fmt};
 
 use crate::crc32::ap_crc32_update;
 
@@ -106,7 +107,7 @@ impl fmt::Display for BinaryFileError {
     }
 }
 
-impl core::error::Error for BinaryFileError {}
+impl error::Error for BinaryFileError {}
 
 /// A Skybrush binary show file in memory, with a valid header.
 ///
@@ -270,7 +271,7 @@ impl<'a> Iterator for Blocks<'a> {
     }
 }
 
-impl core::iter::FusedIterator for Blocks<'_> {}
+impl FusedIterator for Blocks<'_> {}
 
 #[cfg(test)]
 mod tests {

@@ -182,6 +182,15 @@ On top of that, the following rules apply, and only these:
 Setters (`set_X`), predicates (`is_X`, `has_X`) and everything else keep their
 C names.
 
+## Paths
+
+Code names an item with at most one `::`: import the module or the item,
+then write `error::Error` or `Error`, not `core::error::Error`. A file that
+imports `core::fmt` and writes `fmt::Display` writes `error::Error` too,
+not `core::error::Error`. Paths into the crate's own modules
+(`crate::poly::Poly`) are imported the same way. Where idiomatic Rust
+writes a longer path (e.g. in a macro or a `#[derive]`), that wins.
+
 ## Floating point and toolchain
 
 As in `CLAUDE.md`: `f32` with math functions from `libm`, no `mul_add`, and no

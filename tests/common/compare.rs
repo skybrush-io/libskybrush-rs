@@ -4,6 +4,8 @@
 //! libskybrush, which is the reference implementation of the comparison. It
 //! must report a difference exactly where the reference does.
 
+use core::cmp::Reverse;
+
 use serde_json::{Map, Number, Value};
 
 /// Keys that are not compared because they do not describe the behaviour.
@@ -46,7 +48,7 @@ pub struct Tolerances {
 impl Tolerances {
     pub fn new(by_unit: impl IntoIterator<Item = (String, Tolerance)>, default: Tolerance) -> Self {
         let mut by_unit: Vec<_> = by_unit.into_iter().collect();
-        by_unit.sort_by_key(|(unit, _)| core::cmp::Reverse(unit.len()));
+        by_unit.sort_by_key(|(unit, _)| Reverse(unit.len()));
         Self { by_unit, default }
     }
 

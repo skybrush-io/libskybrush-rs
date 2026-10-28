@@ -12,7 +12,7 @@
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::PathBuf;
-use std::{env, fs};
+use std::{env, fs, io};
 
 /// Maximum number of differences to report per item.
 const MAX_REPORTED_DIFFERENCES: usize = 20;
@@ -152,7 +152,7 @@ impl Ratchet {
 fn read_list(path: &PathBuf) -> BTreeSet<String> {
     let contents = match fs::read_to_string(path) {
         Ok(contents) => contents,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(err) if err.kind() == io::ErrorKind::NotFound => String::new(),
         Err(err) => panic!("cannot read {}: {err}", path.display()),
     };
     contents

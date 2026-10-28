@@ -19,6 +19,7 @@ mod common;
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::Cell;
+use std::hint::black_box;
 
 use common::oracle;
 use skybrush::formats::binary::BinaryFile;
@@ -77,12 +78,12 @@ fn trajectories_are_loaded_and_played_without_allocating() {
             // Forwards, backwards and after the end
             for step in (0..=200).chain((0..=200).rev()) {
                 let t = duration * f32::from(u8::try_from(step).unwrap()) / 180.0;
-                std::hint::black_box(player.position_at(t));
-                std::hint::black_box(player.velocity_at(t));
-                std::hint::black_box(player.acceleration_at(t));
+                black_box(player.position_at(t));
+                black_box(player.velocity_at(t));
+                black_box(player.acceleration_at(t));
             }
-            std::hint::black_box(trajectory.axis_aligned_bounding_box());
-            std::hint::black_box(trajectory.end_position());
+            black_box(trajectory.axis_aligned_bounding_box());
+            black_box(trajectory.end_position());
         });
         assert_eq!(count, 0, "{name}: loading or playback allocated");
     }
@@ -90,5 +91,5 @@ fn trajectories_are_loaded_and_played_without_allocating() {
 
 #[test]
 fn the_counter_counts() {
-    assert_eq!(allocations_of(|| drop(std::hint::black_box(vec![1_u8]))), 1);
+    assert_eq!(allocations_of(|| drop(black_box(vec![1_u8]))), 1);
 }
