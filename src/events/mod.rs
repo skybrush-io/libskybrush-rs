@@ -96,6 +96,7 @@ impl Event {
 
 /// Why an event list could not be read or modified.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum EventListError {
     /// The events of the event list block are not sorted by timestamp.
     Corrupted,
@@ -113,7 +114,7 @@ impl fmt::Display for EventListError {
         match self {
             Self::Corrupted => f.write_str("the events are not sorted by timestamp"),
             Self::OutOfOrder => f.write_str("the event is earlier than the last event"),
-            Self::File(err) => write!(f, "{err}"),
+            Self::File(_) => f.write_str("the show file could not be read"),
             Self::OutOfMemory => f.write_str("out of memory"),
         }
     }

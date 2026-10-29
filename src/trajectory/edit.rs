@@ -23,6 +23,7 @@ const MAX_LANDING_DURATION_SEC: f32 = 60.0;
 
 /// Why the end of a trajectory could not be replaced with a landing.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum LandingError {
     /// The statistics do not contain the landing time.
     MissingLandingTime,
@@ -44,7 +45,7 @@ impl fmt::Display for LandingError {
             Self::NotBelow => {
                 f.write_str("the landing position is not below the position at the landing time")
             }
-            Self::Builder(err) => write!(f, "{err}"),
+            Self::Builder(_) => f.write_str("the landing segment could not be written"),
         }
     }
 }

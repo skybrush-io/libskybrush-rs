@@ -13,6 +13,7 @@ const MAX_SCALE: u8 = 127;
 
 /// Why an RTH plan entry could not be converted to a trajectory.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum RthTrajectoryError {
     /// A coordinate is too large for any scale of a trajectory.
     ScaleOverflow,
@@ -32,8 +33,8 @@ impl fmt::Display for RthTrajectoryError {
             Self::ScaleOverflow => f.write_str("a coordinate is too large for a trajectory"),
             Self::InvalidDuration => f.write_str("a duration is negative or NaN"),
             Self::DurationOverflow => f.write_str("a duration is too long"),
-            Self::Builder(err) => write!(f, "{err}"),
-            Self::Trajectory(err) => write!(f, "{err}"),
+            Self::Builder(_) => f.write_str("the trajectory could not be built"),
+            Self::Trajectory(_) => f.write_str("the trajectory that was built could not be read"),
         }
     }
 }

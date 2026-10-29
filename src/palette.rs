@@ -27,6 +27,7 @@ const COLOR_LENGTH: usize = 3;
 /// # }
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ColorPaletteError {
     /// The number of bytes is not a multiple of three.
     InvalidLength,

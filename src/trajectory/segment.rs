@@ -1,5 +1,7 @@
 //! A single segment of a trajectory.
 
+use core::cell::OnceCell;
+
 use crate::basic_types::Vector3WithYaw;
 use crate::parsing::{read_i16, read_u16};
 use crate::poly::{MAX_POLY_COEFFS, Poly, Poly4D};
@@ -21,7 +23,7 @@ pub(crate) fn coords_length(header: u8) -> usize {
 }
 
 /// A segment of a trajectory, with its polynomials calculated lazily.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct TrajectorySegment {
     start_time_msec: u32,
     end_time_msec: u32,
@@ -35,9 +37,9 @@ pub struct TrajectorySegment {
     /// point, and their numbers.
     points: [[f32; MAX_POLY_COEFFS]; 3],
     num_points: [usize; 3],
-    poly: Option<Poly4D>,
-    dpoly: Option<Poly4D>,
-    ddpoly: Option<Poly4D>,
+    poly: OnceCell<Poly4D>,
+    dpoly: OnceCell<Poly4D>,
+    ddpoly: OnceCell<Poly4D>,
 }
 
 impl TrajectorySegment {
@@ -59,9 +61,9 @@ impl TrajectorySegment {
             end: position,
             points,
             num_points: [1; 3],
-            poly: Some(Poly4D::constant(position)),
-            dpoly: None,
-            ddpoly: None,
+            poly: OnceCell::from(Poly4D::constant(position)),
+            dpoly: OnceCell::new(),
+            ddpoly: OnceCell::new(),
         }
     }
 
@@ -114,9 +116,9 @@ impl TrajectorySegment {
             end,
             points,
             num_points,
-            poly: None,
-            dpoly: None,
-            ddpoly: None,
+            poly: OnceCell::new(),
+            dpoly: OnceCell::new(),
+            ddpoly: OnceCell::new(),
         };
         Some((segment, offset))
     }
@@ -186,9 +188,9 @@ impl TrajectorySegment {
 
     /// The polynomial of the segment. Its `[0, 1]` interval is mapped to the
     /// time interval of the segment.
-    pub fn poly(&mut self) -> &Poly4D {
+    pub fn poly(&self) -> &Poly4D {
         let (points, num_points, yaw) = (&self.points, &self.num_points, self.start.yaw);
-        self.poly.get_or_insert_with(|| {
+        self.poly.get_or_init(|| {
             let axis = |index: usize| {
                 let points = points.get(index).map_or(&[][..], |points| {
                     let count = num_points.get(index).copied().unwrap_or(1);
@@ -207,24 +209,15 @@ impl TrajectorySegment {
 
     /// The first derivative of the polynomial of the segment, with respect to
     /// time in seconds.
-    pub fn dpoly(&mut self) -> &Poly4D {
-        if self.dpoly.is_none() {
-            let poly = *self.poly();
-            let derivative = self.derivative_of(poly);
-            self.dpoly = Some(derivative);
-        }
-        self.dpoly.get_or_insert_with(Poly4D::zero)
+    pub fn dpoly(&self) -> &Poly4D {
+        self.dpoly.get_or_init(|| self.derivative_of(*self.poly()))
     }
 
     /// The second derivative of the polynomial of the segment, with respect to
     /// time in seconds.
-    pub fn ddpoly(&mut self) -> &Poly4D {
-        if self.ddpoly.is_none() {
-            let poly = *self.dpoly();
-            let derivative = self.derivative_of(poly);
-            self.ddpoly = Some(derivative);
-        }
-        self.ddpoly.get_or_insert_with(Poly4D::zero)
+    pub fn ddpoly(&self) -> &Poly4D {
+        self.ddpoly
+            .get_or_init(|| self.derivative_of(*self.dpoly()))
     }
 
     /// The derivative of a polynomial of the segment with respect to time in

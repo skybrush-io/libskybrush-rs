@@ -37,6 +37,7 @@ const HEADER_LENGTH: usize = 9;
 
 /// Why a trajectory could not be read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum TrajectoryError {
     /// The body of the trajectory block is malformed: it is shorter than the
     /// header, or a segment does not fit in it.
@@ -49,7 +50,7 @@ impl fmt::Display for TrajectoryError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Corrupted => f.write_str("the trajectory is malformed"),
-            Self::File(err) => write!(f, "{err}"),
+            Self::File(_) => f.write_str("the show file could not be read"),
         }
     }
 }

@@ -24,6 +24,7 @@ use crate::yaw_control::YawControlError;
 
 /// Why a screenplay could not be read or modified.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ScreenplayError {
     /// The show file has no trajectory.
     MissingTrajectory,
@@ -50,12 +51,12 @@ impl fmt::Display for ScreenplayError {
         match self {
             Self::MissingTrajectory => f.write_str("the show file has no trajectory"),
             Self::InvalidDuration => f.write_str("the duration of the scene is out of range"),
-            Self::File(err) => write!(f, "{err}"),
-            Self::Trajectory(err) => write!(f, "{err}"),
-            Self::LightProgram(err) => write!(f, "{err}"),
-            Self::YawControl(err) => write!(f, "{err}"),
-            Self::EventList(err) => write!(f, "{err}"),
-            Self::RthPlan(err) => write!(f, "{err}"),
+            Self::File(_) => f.write_str("the show file could not be read"),
+            Self::Trajectory(_) => f.write_str("the trajectory could not be read"),
+            Self::LightProgram(_) => f.write_str("the light program could not be read"),
+            Self::YawControl(_) => f.write_str("the yaw control could not be read"),
+            Self::EventList(_) => f.write_str("the events could not be read"),
+            Self::RthPlan(_) => f.write_str("the RTH plan could not be read"),
             Self::OutOfMemory => f.write_str("out of memory"),
         }
     }

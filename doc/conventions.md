@@ -76,10 +76,24 @@ pub enum TrajectoryError {
   (`EPARSE`, `EINVAL`...), so that the test harness can map it. A variant may
   be finer than the C code (several variants may map to `EPARSE`), never
   coarser.
-- The enums are not `#[non_exhaustive]`. The mapping in the test harness is
-  an exhaustive `match`, so adding a variant fails to compile until the
-  variant is mapped.
-- Every enum implements `core::fmt::Display` and `core::error::Error`.
+- The enums are `#[non_exhaustive]`, so that a new variant (e.g. for a new
+  version of the file format) is not a breaking change. The mapping in the
+  test harness therefore has a wildcard arm, which fails the test that meets
+  an unmapped variant; a new variant must be mapped there by hand.
+- Every enum implements `core::fmt::Display` and `core::error::Error`. A
+  variant that wraps the error of another layer returns it from
+  `Error::source()` and has a message of its own, which does not repeat the
+  message of the wrapped error (error reporters print the whole chain).
+
+## Sets of flags
+
+Sets of flags are newtypes around `u8` with private fields and the constants
+`NONE` and `ALL`, e.g. `ControlComponents`. The private macro `impl_flags!`
+(in `src/flags.rs`) gives them the same API: `from_bits_retain`,
+`from_bits_truncate`, `bits`, `contains`, `intersects`, `insert`, `remove`,
+the operators `|`, `&`, `-` and `!`, and binary and hexadecimal formatting.
+Types that own a set of flags may keep the helpers named after the C library
+(e.g. `ScreenplayScene::has_any_flag`).
 
 ## Ownership: share, do not copy
 

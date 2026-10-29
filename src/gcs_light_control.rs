@@ -21,6 +21,7 @@ const MAX_COMPONENT_VALUE: i16 = 4095;
 
 /// Why the setup of light control from the ground station could not be read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum GcsLightControlSetupError {
     /// The body of the block is not a valid tag-length-value stream, a known
     /// tag has a value of the wrong length, or the coordinates or the size
@@ -34,7 +35,7 @@ impl fmt::Display for GcsLightControlSetupError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Corrupted => f.write_str("the GCS light control setup block is malformed"),
-            Self::File(err) => write!(f, "{err}"),
+            Self::File(_) => f.write_str("the show file could not be read"),
         }
     }
 }

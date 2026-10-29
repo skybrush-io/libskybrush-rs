@@ -84,6 +84,7 @@ pub struct BinaryBlock<'a> {
 /// # }
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum BinaryFileError {
     /// The file does not start with the signature `skyb`.
     InvalidSignature,

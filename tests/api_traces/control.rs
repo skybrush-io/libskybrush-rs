@@ -134,10 +134,5 @@ fn replay_sample(ctrl: &mut ShowController<'_>, sample: &Value) -> Value {
 
 /// The known components of an output, as a mask.
 fn components(components: ControlComponents) -> u8 {
-    let known = ControlComponents::POSITION
-        | ControlComponents::VELOCITY
-        | ControlComponents::LIGHTS
-        | ControlComponents::YAW
-        | ControlComponents::YAW_RATE;
-    (components & known).0
+    (components & ControlComponents::ALL).bits()
 }

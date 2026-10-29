@@ -29,7 +29,7 @@ use crate::basic_types::Vector3WithYaw;
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct TrajectoryPlayerState {
     /// Offset of the current segment in the bytes of the trajectory.
     start: usize,
@@ -111,8 +111,9 @@ impl<'a, T: Deref<Target = Trajectory<'a>>> TrajectoryPlayer<T> {
     }
 
     /// The current segment of the player.
-    pub fn current_segment(&mut self) -> &mut TrajectorySegment {
-        &mut self.state.segment
+    #[must_use]
+    pub const fn current_segment(&self) -> &TrajectorySegment {
+        &self.state.segment
     }
 
     /// Whether the player is at a segment of the trajectory, as opposed to
@@ -155,12 +156,12 @@ impl<'a, T: Deref<Target = Trajectory<'a>>> TrajectoryPlayer<T> {
     /// The current state of the player, to be restored later.
     #[must_use]
     pub fn save_state(&self) -> TrajectoryPlayerState {
-        self.state
+        self.state.clone()
     }
 
     /// Restores a state saved earlier from a player of the same trajectory.
     pub fn restore_state(&mut self, state: &TrajectoryPlayerState) {
-        self.state = *state;
+        self.state.clone_from(state);
     }
 
     /// Moves to the segment that contains the given time, and returns the

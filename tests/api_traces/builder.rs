@@ -94,7 +94,7 @@ fn summary(trajectory: &Trajectory<'_>) -> Value {
     let mut sampler = TrajectoryPlayer::new(trajectory);
     let mut segments = Vec::new();
     while player.has_more_segments() {
-        let segment = *player.current_segment();
+        let segment = player.current_segment();
         let positions: Vec<Value> = SEGMENT_SAMPLES
             .iter()
             .map(|&ratio| {

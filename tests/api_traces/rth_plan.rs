@@ -206,7 +206,7 @@ fn entry_of(golden: &Value) -> RthPlanEntry {
     let flags = u8::try_from(u32_of(&golden["flags"])).expect("flags in a byte");
     RthPlanEntry {
         time_sec: f32_of(&golden["time_sec"]),
-        flags: RthPlanEntryFlags::from_bits(flags),
+        flags: RthPlanEntryFlags::from_bits_retain(flags),
         landing_target: Vector2 {
             x: f32_of(&golden["landing_target_mm"][0]),
             y: f32_of(&golden["landing_target_mm"][1]),

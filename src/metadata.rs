@@ -17,6 +17,7 @@ mod tags {
 
 /// Why the metadata of a show could not be read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ShowMetadataError {
     /// The body of the show metadata block is not a valid tag-length-value
     /// stream, or a known tag has a value of the wrong length.
@@ -29,7 +30,7 @@ impl fmt::Display for ShowMetadataError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Corrupted => f.write_str("the show metadata block is malformed"),
-            Self::File(err) => write!(f, "{err}"),
+            Self::File(_) => f.write_str("the show file could not be read"),
         }
     }
 }

@@ -34,6 +34,7 @@ use libm::{ceilf, fabsf, sqrtf};
 /// # }
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum TimeAxisError {
     /// A rate of the segment is negative or NaN.
     InvalidSegment,

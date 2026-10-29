@@ -86,6 +86,7 @@ pub mod colors;
 pub mod control;
 mod crc32;
 pub mod events;
+mod flags;
 pub mod formats;
 pub mod gcs_light_control;
 pub mod lights;

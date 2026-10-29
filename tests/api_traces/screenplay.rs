@@ -66,14 +66,20 @@ pub fn replay_queries(golden: &Value) -> Replay {
         .collect();
 
     let mut flag_operations = Vec::new();
-    foreign.set_flags(ScreenplaySceneFlags(0x0f), ScreenplaySceneFlags(0x05));
-    flag_operations.push(foreign.flags().0);
-    foreign.set_flags(ScreenplaySceneFlags(0x03), ScreenplaySceneFlags(0x02));
-    flag_operations.push(foreign.flags().0);
-    foreign.clear_flag(ScreenplaySceneFlags(0x04));
-    flag_operations.push(foreign.flags().0);
-    foreign.set_flag(ScreenplaySceneFlags(0x80));
-    flag_operations.push(foreign.flags().0);
+    foreign.set_flags(
+        ScreenplaySceneFlags::from_bits_retain(0x0f),
+        ScreenplaySceneFlags::from_bits_retain(0x05),
+    );
+    flag_operations.push(foreign.flags().bits());
+    foreign.set_flags(
+        ScreenplaySceneFlags::from_bits_retain(0x03),
+        ScreenplaySceneFlags::from_bits_retain(0x02),
+    );
+    flag_operations.push(foreign.flags().bits());
+    foreign.clear_flag(ScreenplaySceneFlags::from_bits_retain(0x04));
+    flag_operations.push(foreign.flags().bits());
+    foreign.set_flag(ScreenplaySceneFlags::from_bits_retain(0x80));
+    flag_operations.push(foreign.flags().bits());
 
     let set_duration_sec: Vec<Value> = DURATIONS_SEC
         .iter()
@@ -173,13 +179,13 @@ fn trajectory(
 }
 
 fn scene_json(screenplay: &Screenplay<'_>, scene: &ScreenplayScene<'_>) -> Value {
-    let masks = || (0..4).map(ScreenplaySceneFlags);
+    let masks = || (0..4).map(ScreenplaySceneFlags::from_bits_retain);
     let has_any_flag: Vec<bool> = masks().map(|mask| scene.has_any_flag(mask)).collect();
     let has_all_flags: Vec<bool> = masks().map(|mask| scene.has_all_flags(mask)).collect();
     let uncovered = scene.uncovered_trajectory_duration_sec();
     json!({
         "tag": scene.tag(),
-        "flags": scene.flags().0,
+        "flags": scene.flags().bits(),
         "origin_ms": scene.origin_msec(),
         "duration_ms": duration_json(scene),
         "is_infinite": scene.is_infinite(),

@@ -10,7 +10,6 @@
 )]
 
 use core::f32::consts::PI;
-use core::ops::Deref;
 use core::{error, fmt};
 
 use libm::{atan2f, cbrtf, cosf, sqrtf};
@@ -34,6 +33,7 @@ fn is_zero(value: f32) -> bool {
 
 /// Why an operation on a polynomial failed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum PolyError {
     /// The operation is not implemented for polynomials of this degree.
     UnsupportedDegree(u8),
@@ -67,13 +67,52 @@ impl Roots {
         }
         result
     }
+
+    /// The roots, as a slice.
+    #[must_use]
+    pub fn as_slice(&self) -> &[f32] {
+        self.values.get(..self.len).unwrap_or_default()
+    }
+
+    /// The number of roots.
+    #[must_use]
+    pub const fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Whether there are no roots.
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// An iterator over the roots.
+    pub fn iter(&self) -> core::slice::Iter<'_, f32> {
+        self.as_slice().iter()
+    }
 }
 
-impl Deref for Roots {
-    type Target = [f32];
+impl AsRef<[f32]> for Roots {
+    fn as_ref(&self) -> &[f32] {
+        self.as_slice()
+    }
+}
 
-    fn deref(&self) -> &[f32] {
-        self.values.get(..self.len).unwrap_or_default()
+impl<'a> IntoIterator for &'a Roots {
+    type Item = &'a f32;
+    type IntoIter = core::slice::Iter<'a, f32>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl IntoIterator for Roots {
+    type Item = f32;
+    type IntoIter = core::iter::Take<core::array::IntoIter<f32, 3>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.values.into_iter().take(self.len)
     }
 }
 
@@ -425,7 +464,7 @@ impl Poly {
     fn leftmost_root_in_unit_interval(&self, value: f32) -> Option<f32> {
         let roots = self.solve(value).ok()?;
         let mut leftmost: Option<f32> = None;
-        for &root in roots.iter() {
+        for &root in &roots {
             if (0.0..=1.0).contains(&root) && leftmost.is_none_or(|leftmost| root < leftmost) {
                 leftmost = Some(root);
             }
@@ -822,26 +861,36 @@ mod tests {
 
     #[test]
     fn solve_low_degrees() {
-        let solve = |coeffs: &[f32], rhs| sorted(Poly::new(coeffs).solve(rhs).unwrap());
-        assert!(solve(&[], 0.0).is_empty());
-        assert!(solve(&[], 2.0).is_empty());
-        assert_eq!(*solve(&[0.0], 0.0), [0.0]);
-        assert!(solve(&[2.0], 0.0).is_empty());
-        assert_eq!(*solve(&[2.0], 2.0), [0.0]);
+        let solve = |coeffs: &[f32], rhs| {
+            sorted(Poly::new(coeffs).solve(rhs).unwrap())
+                .as_slice()
+                .to_vec()
+        };
+        assert_eq!(solve(&[], 0.0), [0.0; 0]);
+        assert_eq!(solve(&[], 2.0), [0.0; 0]);
+        assert_eq!(solve(&[0.0], 0.0), [0.0]);
+        assert_eq!(solve(&[2.0], 0.0), [0.0; 0]);
+        assert_eq!(solve(&[2.0], 2.0), [0.0]);
 
         let linear = Poly::linear(5.0, 10.0, 20.0);
-        assert_eq!(*linear.solve(0.0).unwrap(), [-5.0]);
-        assert_eq!(*linear.solve(15.0).unwrap(), [2.5]);
+        assert_eq!(linear.solve(0.0).unwrap().as_slice(), [-5.0]);
+        assert_eq!(linear.solve(15.0).unwrap().as_slice(), [2.5]);
         assert!(Poly::linear(5.0, 10.0, 10.0).solve(0.0).unwrap().is_empty());
-        assert_eq!(*Poly::linear(5.0, 10.0, 10.0).solve(10.0).unwrap(), [0.0]);
+        assert_eq!(
+            Poly::linear(5.0, 10.0, 10.0)
+                .solve(10.0)
+                .unwrap()
+                .as_slice(),
+            [0.0]
+        );
 
-        assert_eq!(*solve(&[10.0, 2.0, 0.0], 0.0), [-5.0]);
-        assert_eq!(*solve(&[0.0, 2.0, 0.0], -10.0), [-5.0]);
-        assert_eq!(*solve(&[9.0, -6.0, 1.0], 0.0), [3.0]);
-        assert_eq!(*solve(&[9.0, -6.0, 1.0], 4.0), [1.0, 5.0]);
-        assert_eq!(*solve(&[5.0, -6.0, 1.0], 0.0), [1.0, 5.0]);
-        assert_eq!(*solve(&[5.0, -6.0, 1.0], -4.0), [3.0]);
-        assert_eq!(*solve(&[6.0, -3.0, 0.0], 0.0), [2.0]);
+        assert_eq!(solve(&[10.0, 2.0, 0.0], 0.0), [-5.0]);
+        assert_eq!(solve(&[0.0, 2.0, 0.0], -10.0), [-5.0]);
+        assert_eq!(solve(&[9.0, -6.0, 1.0], 0.0), [3.0]);
+        assert_eq!(solve(&[9.0, -6.0, 1.0], 4.0), [1.0, 5.0]);
+        assert_eq!(solve(&[5.0, -6.0, 1.0], 0.0), [1.0, 5.0]);
+        assert_eq!(solve(&[5.0, -6.0, 1.0], -4.0), [3.0]);
+        assert_eq!(solve(&[6.0, -3.0, 0.0], 0.0), [2.0]);
         let roots = solve(&[2.0, -1.0, -3.0], 0.0);
         assert_eq!(roots.len(), 2);
         assert_close(-1.0, roots[0], 1e-7);

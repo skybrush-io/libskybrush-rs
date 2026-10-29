@@ -23,6 +23,7 @@ pub struct TlvEntry<'a> {
 
 /// Why a tag-length-value stream could not be read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum TlvError {
     /// The stream ends in the middle of the header of an entry.
     TruncatedHeader,

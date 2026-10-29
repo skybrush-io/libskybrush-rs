@@ -27,6 +27,7 @@ const DELTA_LENGTH: usize = 4;
 
 /// Why a yaw control object could not be read or created.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum YawControlError {
     /// The body of the yaw control block is malformed: it is shorter than the
     /// header, or it ends in the middle of a delta.
@@ -41,7 +42,7 @@ impl fmt::Display for YawControlError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Corrupted => f.write_str("the yaw control block is malformed"),
-            Self::File(err) => write!(f, "{err}"),
+            Self::File(_) => f.write_str("the show file could not be read"),
             Self::OutOfMemory => f.write_str("out of memory"),
         }
     }

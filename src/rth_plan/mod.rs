@@ -12,9 +12,9 @@
 
 mod trajectory;
 
+use crate::flags::impl_flags;
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
-use core::ops::BitOr;
 use core::{error, fmt};
 
 pub use trajectory::RthTrajectoryError;
@@ -84,39 +84,11 @@ impl RthPlanEntryFlags {
     pub const HAS_PRE_DELAY: Self = Self(1 << 4);
     /// A delay after the action.
     pub const HAS_POST_DELAY: Self = Self(1 << 5);
-
-    /// The flags with the given bits; bits without a meaning are kept.
-    #[must_use]
-    pub const fn from_bits(bits: u8) -> Self {
-        Self(bits)
-    }
-
-    /// The bits of the flags.
-    #[must_use]
-    pub const fn bits(self) -> u8 {
-        self.0
-    }
-
-    /// Whether any of the given flags is set.
-    #[must_use]
-    pub const fn intersects(self, other: Self) -> bool {
-        self.0 & other.0 != 0
-    }
-
-    /// Whether all the given flags are set.
-    #[must_use]
-    pub const fn contains(self, other: Self) -> bool {
-        self.0 & other.0 == other.0
-    }
+    /// All parameters.
+    pub const ALL: Self = Self(0x3f);
 }
 
-impl BitOr for RthPlanEntryFlags {
-    type Output = Self;
-
-    fn bitor(self, other: Self) -> Self {
-        Self(self.0 | other.0)
-    }
-}
+impl_flags!(RthPlanEntryFlags);
 
 /// What to do when the return-to-home action is triggered at a time instant.
 /// Coordinates are in millimeters, times in seconds.
@@ -183,6 +155,7 @@ impl RthPlanEntry {
 
 /// Why an RTH plan could not be read or evaluated.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum RthPlanError {
     /// The body of the RTH plan block is malformed: its header, its points
     /// or its entries do not fit in it.
@@ -204,7 +177,7 @@ impl fmt::Display for RthPlanError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Corrupted => f.write_str("the RTH plan is malformed"),
-            Self::File(err) => write!(f, "{err}"),
+            Self::File(_) => f.write_str("the show file could not be read"),
             Self::VarintOverflow => f.write_str("an entry holds a varint above 32 bits"),
             Self::TimeOverflow => f.write_str("the time of an entry does not fit into 32 bits"),
             Self::DurationTooLong => f.write_str("an entry has a duration above 2^24 seconds"),
@@ -505,7 +478,7 @@ impl Reader<'_, '_> {
     /// from the defaults of the plan.
     fn entry(&mut self, flags: u8, time_sec: f32) -> Result<RthPlanEntry, RthPlanError> {
         let mut entry = RthPlanEntry::new(Some(self.plan), time_sec);
-        let flags = RthPlanEntryFlags::from_bits(flags);
+        let flags = RthPlanEntryFlags::from_bits_retain(flags);
         if flags.contains(RthPlanEntryFlags::HAS_NECK) {
             entry.pre_neck = self.coordinate()?;
             entry.pre_neck_duration_sec = self.duration()?;
@@ -529,7 +502,7 @@ impl Reader<'_, '_> {
         if flags.contains(RthPlanEntryFlags::HAS_POST_DELAY) {
             entry.post_delay_sec = self.duration()?;
         }
-        entry.flags = entry.flags | flags;
+        entry.flags |= flags;
         Ok(entry)
     }
 
@@ -609,7 +582,7 @@ fn validate(bytes: &[u8]) -> Result<(), RthPlanError> {
     for _ in 0..u16::from_le_bytes(count) {
         let (&flags, after) = rest.split_first().ok_or(corrupted)?;
         rest = after;
-        let flags = RthPlanEntryFlags::from_bits(flags);
+        let flags = RthPlanEntryFlags::from_bits_retain(flags);
         skip_varuint(&mut rest)?;
         if flags.contains(RthPlanEntryFlags::HAS_NECK) {
             skip_i16(&mut rest)?;

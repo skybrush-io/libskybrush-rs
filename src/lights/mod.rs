@@ -38,6 +38,7 @@ mod opcodes {
 
 /// Why a light program could not be read or created.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum LightProgramError {
     /// The show file could not be read.
     File(BinaryFileError),
@@ -48,7 +49,7 @@ pub enum LightProgramError {
 impl fmt::Display for LightProgramError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::File(err) => write!(f, "{err}"),
+            Self::File(_) => f.write_str("the show file could not be read"),
             Self::OutOfMemory => f.write_str("out of memory"),
         }
     }

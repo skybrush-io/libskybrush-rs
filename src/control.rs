@@ -1,8 +1,8 @@
 //! The show controller: what the drone should do at a time instant of a
 //! screenplay, and which events it should fire.
 
+use crate::flags::impl_flags;
 use alloc::rc::Rc;
-use core::ops::{BitAnd, BitOr};
 use core::{mem, ptr};
 
 use crate::basic_types::Vector3;
@@ -16,9 +16,9 @@ use crate::yaw_control::{YawControl, YawPlayer};
 /// The longest warped time that is passed to the light player, in seconds.
 const MAX_LIGHT_TIME_SEC: f32 = 86_400.0;
 
-/// The components of a control output.
+/// The components of a control output: a set of flags.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub struct ControlComponents(pub u8);
+pub struct ControlComponents(u8);
 
 impl ControlComponents {
     /// No components.
@@ -33,23 +33,11 @@ impl ControlComponents {
     pub const YAW: Self = Self(8);
     /// The yaw rate.
     pub const YAW_RATE: Self = Self(16);
+    /// All components.
+    pub const ALL: Self = Self(31);
 }
 
-impl BitOr for ControlComponents {
-    type Output = Self;
-
-    fn bitor(self, other: Self) -> Self {
-        Self(self.0 | other.0)
-    }
-}
-
-impl BitAnd for ControlComponents {
-    type Output = Self;
-
-    fn bitand(self, other: Self) -> Self {
-        Self(self.0 & other.0)
-    }
-}
+impl_flags!(ControlComponents);
 
 /// What the drone should do: some of a position, a velocity, a color, a yaw
 /// and a yaw rate. Positions are in millimeters, yaws in degrees.
@@ -90,19 +78,19 @@ impl ControlOutput {
 
     /// Removes the given components.
     pub const fn clear_components(&mut self, components: ControlComponents) {
-        self.mask.0 &= !components.0;
+        self.mask.remove(components);
     }
 
     /// Whether any of the given components is set.
     #[must_use]
     pub const fn has_any_component_in(&self, components: ControlComponents) -> bool {
-        self.mask.0 & components.0 != 0
+        self.mask.intersects(components)
     }
 
     /// Whether all the given components are set.
     #[must_use]
     pub const fn has_all_components_in(&self, components: ControlComponents) -> bool {
-        self.mask.0 & components.0 == components.0
+        self.mask.contains(components)
     }
 
     /// The position, if it is set.
@@ -138,31 +126,31 @@ impl ControlOutput {
     /// Sets the position.
     pub const fn set_position(&mut self, position: Vector3) {
         self.position = position;
-        self.mask.0 |= ControlComponents::POSITION.0;
+        self.mask.insert(ControlComponents::POSITION);
     }
 
     /// Sets the velocity.
     pub const fn set_velocity(&mut self, velocity: Vector3) {
         self.velocity = velocity;
-        self.mask.0 |= ControlComponents::VELOCITY.0;
+        self.mask.insert(ControlComponents::VELOCITY);
     }
 
     /// Sets the color.
     pub const fn set_color(&mut self, color: RgbColor) {
         self.color = color;
-        self.mask.0 |= ControlComponents::LIGHTS.0;
+        self.mask.insert(ControlComponents::LIGHTS);
     }
 
     /// Sets the yaw.
     pub const fn set_yaw(&mut self, yaw: f32) {
         self.yaw = yaw;
-        self.mask.0 |= ControlComponents::YAW.0;
+        self.mask.insert(ControlComponents::YAW);
     }
 
     /// Sets the yaw rate.
     pub const fn set_yaw_rate(&mut self, yaw_rate: f32) {
         self.yaw_rate = yaw_rate;
-        self.mask.0 |= ControlComponents::YAW_RATE.0;
+        self.mask.insert(ControlComponents::YAW_RATE);
     }
 
     /// The given value if the given component is set.

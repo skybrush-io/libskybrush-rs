@@ -1,9 +1,10 @@
 //! Names of the errors of the crate, as the oracle records them.
 //!
 //! The oracle records errors by the names of the error codes of the C
-//! library. Each error enum of the crate maps every variant to one name; the
-//! matches are exhaustive, so a new variant does not compile until it is
-//! mapped here.
+//! library. Each error enum of the crate maps every variant to one name. The
+//! enums are `#[non_exhaustive]`, so the matches need a wildcard arm: a new
+//! variant compiles without being mapped here, and fails the test that meets
+//! it.
 
 use skybrush::events::EventListError;
 use skybrush::formats::binary::BinaryFileError;
@@ -18,6 +19,11 @@ use skybrush::trajectory::{
 };
 use skybrush::yaw_control::YawControlError;
 
+/// Fails the test on an error variant that is not mapped to a name.
+fn unmapped(err: &impl core::fmt::Debug) -> ! {
+    panic!("the error {err:?} is not mapped to the name of a C error code")
+}
+
 /// The name of the C error code that corresponds to an error.
 pub trait ErrorName {
     fn error_name(&self) -> &'static str;
@@ -31,6 +37,7 @@ impl ErrorName for BinaryFileError {
             }
             Self::ChecksumMismatch { .. } => "ECORRUPTED",
             Self::TruncatedBlockHeader | Self::TruncatedBlock => "EREAD",
+            _ => unmapped(self),
         }
     }
 }
@@ -40,6 +47,7 @@ impl ErrorName for TrajectoryError {
         match self {
             Self::Corrupted => "ECORRUPTED",
             Self::File(err) => err.error_name(),
+            _ => unmapped(self),
         }
     }
 }
@@ -51,6 +59,7 @@ impl ErrorName for TrajectoryStatsError {
             | Self::InvalidTakeoffSpeed
             | Self::InvalidMinAscent
             | Self::InvalidPreferredDescent => "EINVAL",
+            _ => unmapped(self),
         }
     }
 }
@@ -64,6 +73,7 @@ impl ErrorName for TrajectoryBuilderError {
             | Self::CoordinateOutOfRange => "EINVAL",
             Self::StartPositionAlreadyUsed => "FAILURE",
             Self::OutOfMemory => "ENOMEM",
+            _ => unmapped(self),
         }
     }
 }
@@ -73,6 +83,7 @@ impl ErrorName for LandingError {
         match self {
             Self::MissingLandingTime | Self::InvalidVelocity | Self::NotBelow => "EINVAL",
             Self::Builder(err) => err.error_name(),
+            _ => unmapped(self),
         }
     }
 }
@@ -82,6 +93,7 @@ impl ErrorName for LightProgramError {
         match self {
             Self::File(err) => err.error_name(),
             Self::OutOfMemory => "ENOMEM",
+            _ => unmapped(self),
         }
     }
 }
@@ -93,6 +105,7 @@ impl ErrorName for EventListError {
             Self::OutOfOrder => "EINVAL",
             Self::File(err) => err.error_name(),
             Self::OutOfMemory => "ENOMEM",
+            _ => unmapped(self),
         }
     }
 }
@@ -103,6 +116,7 @@ impl ErrorName for YawControlError {
             Self::Corrupted => "ECORRUPTED",
             Self::File(err) => err.error_name(),
             Self::OutOfMemory => "ENOMEM",
+            _ => unmapped(self),
         }
     }
 }
@@ -112,6 +126,7 @@ impl ErrorName for ShowMetadataError {
         match self {
             Self::Corrupted => "ECORRUPTED",
             Self::File(err) => err.error_name(),
+            _ => unmapped(self),
         }
     }
 }
@@ -121,6 +136,7 @@ impl ErrorName for GcsLightControlSetupError {
         match self {
             Self::Corrupted => "ECORRUPTED",
             Self::File(err) => err.error_name(),
+            _ => unmapped(self),
         }
     }
 }
@@ -132,6 +148,7 @@ impl ErrorName for RthPlanError {
             Self::File(err) => err.error_name(),
             Self::VarintOverflow | Self::TimeOverflow | Self::DurationTooLong => "EOVERFLOW",
             Self::MissingPoint => "EINVAL",
+            _ => unmapped(self),
         }
     }
 }
@@ -143,6 +160,7 @@ impl ErrorName for RthTrajectoryError {
             Self::InvalidDuration => "EINVAL",
             Self::Builder(err) => err.error_name(),
             Self::Trajectory(err) => err.error_name(),
+            _ => unmapped(self),
         }
     }
 }
@@ -152,6 +170,7 @@ impl ErrorName for TimeAxisError {
         match self {
             Self::InvalidSegment | Self::IndexOutOfRange | Self::InvalidOrigin => "EINVAL",
             Self::OutOfMemory => "ENOMEM",
+            _ => unmapped(self),
         }
     }
 }
@@ -168,6 +187,7 @@ impl ErrorName for ScreenplayError {
             Self::EventList(err) => err.error_name(),
             Self::RthPlan(err) => err.error_name(),
             Self::OutOfMemory => "ENOMEM",
+            _ => unmapped(self),
         }
     }
 }

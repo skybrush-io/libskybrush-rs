@@ -46,6 +46,7 @@ const BEZIER: u8 = 0x02;
 /// # }
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum TrajectoryBuilderError {
     /// The scale is zero or larger than 127.
     InvalidScale,

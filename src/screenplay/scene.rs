@@ -1,19 +1,18 @@
 //! Scenes of a screenplay.
 
-use alloc::rc::Rc;
-use core::ops::BitOr;
-
 use super::ScreenplayError;
 use crate::events::EventList;
+use crate::flags::impl_flags;
 use crate::formats::binary::BinaryFile;
 use crate::lights::LightProgram;
 use crate::time_axis::{TimeAxis, TimeAxisError};
 use crate::trajectory::Trajectory;
 use crate::yaw_control::YawControl;
+use alloc::rc::Rc;
 
-/// The flags of a scene; bits without a meaning are kept.
+/// The flags of a scene: a set of flags. Bits without a meaning are kept.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub struct ScreenplaySceneFlags(pub u8);
+pub struct ScreenplaySceneFlags(u8);
 
 impl ScreenplaySceneFlags {
     /// No flags.
@@ -24,13 +23,7 @@ impl ScreenplaySceneFlags {
     pub const ALL: Self = Self(0xff);
 }
 
-impl BitOr for ScreenplaySceneFlags {
-    type Output = Self;
-
-    fn bitor(self, other: Self) -> Self {
-        Self(self.0 | other.0)
-    }
-}
+impl_flags!(ScreenplaySceneFlags);
 
 /// A scene of a screenplay: a trajectory, a light program, a yaw control
 /// and events, played on the show clock from the origin of the time axis of
@@ -284,13 +277,13 @@ impl<'a> ScreenplayScene<'a> {
     /// Whether the scene has any of the flags of the given mask.
     #[must_use]
     pub const fn has_any_flag(&self, mask: ScreenplaySceneFlags) -> bool {
-        self.flags.0 & mask.0 != 0
+        self.flags.intersects(mask)
     }
 
     /// Whether the scene has every flag of the given mask.
     #[must_use]
     pub const fn has_all_flags(&self, mask: ScreenplaySceneFlags) -> bool {
-        self.flags.0 & mask.0 == mask.0
+        self.flags.contains(mask)
     }
 
     /// Whether the scene has the given flag.
@@ -301,12 +294,12 @@ impl<'a> ScreenplayScene<'a> {
 
     /// Sets the given flag.
     pub const fn set_flag(&mut self, flag: ScreenplaySceneFlags) {
-        self.flags.0 |= flag.0;
+        self.flags.insert(flag);
     }
 
     /// Clears the given flag.
     pub const fn clear_flag(&mut self, flag: ScreenplaySceneFlags) {
-        self.flags.0 &= !flag.0;
+        self.flags.remove(flag);
     }
 
     /// Sets the flags of the given mask to the given values; the other flags

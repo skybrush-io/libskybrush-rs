@@ -2,7 +2,9 @@
 //! duration, the proposed takeoff and landing times, and the distance between
 //! the start and the end.
 
-use core::ops::{BitOr, BitOrAssign, Deref};
+use core::ops::Deref;
+
+use crate::flags::impl_flags;
 use core::{error, fmt};
 
 use libm::{fabsf, hypotf};
@@ -28,51 +30,9 @@ impl TrajectoryStatComponents {
     pub const LANDING_TIME: Self = Self(8);
     /// All components.
     pub const ALL: Self = Self(15);
-
-    /// The set of components with the given bits, as in the C library.
-    /// Unknown bits are ignored.
-    #[must_use]
-    pub const fn from_bits_truncate(bits: u8) -> Self {
-        Self(bits & Self::ALL.0)
-    }
-
-    /// The bits of the components, as in the C library.
-    #[must_use]
-    pub const fn bits(self) -> u8 {
-        self.0
-    }
-
-    /// Whether the set contains all components of `other`.
-    #[must_use]
-    pub const fn contains(self, other: Self) -> bool {
-        self.0 & other.0 == other.0
-    }
-
-    /// Whether the set is empty.
-    #[must_use]
-    pub const fn is_empty(self) -> bool {
-        self.0 == 0
-    }
-
-    /// Removes the components of `other` from the set.
-    pub const fn remove(&mut self, other: Self) {
-        self.0 &= !other.0;
-    }
 }
 
-impl BitOr for TrajectoryStatComponents {
-    type Output = Self;
-
-    fn bitor(self, other: Self) -> Self {
-        Self(self.0 | other.0)
-    }
-}
-
-impl BitOrAssign for TrajectoryStatComponents {
-    fn bitor_assign(&mut self, other: Self) {
-        self.0 |= other.0;
-    }
-}
+impl_flags!(TrajectoryStatComponents);
 
 /// The statistics of a trajectory. Components that were not calculated are
 /// `None`.
@@ -124,6 +84,7 @@ pub struct LandingStats {
 /// Why the statistics of a trajectory could not be calculated: a setting of
 /// the calculator is invalid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum TrajectoryStatsError {
     /// The acceleration is not positive.
     InvalidAcceleration,
@@ -425,7 +386,7 @@ struct VerticalRun {
 }
 
 /// The landing at the end of a segment, with the velocity at its end.
-fn landing_at_end(segment: &mut TrajectorySegment) -> LandingStats {
+fn landing_at_end(segment: &TrajectorySegment) -> LandingStats {
     LandingStats {
         landing_time_sec: segment.end_time_sec(),
         pos_at_landing_time: segment.end(),
