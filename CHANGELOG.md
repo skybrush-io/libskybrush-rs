@@ -7,8 +7,6 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
-## [0.1.0] - unreleased
-
 The first release: a rewrite of the C library libskybrush 6.0.2 in Rust,
 with the fixes made to the C library since then.
 
@@ -20,3 +18,6 @@ with the fixes made to the C library since then.
 - Players of the components, the statistics of trajectories, the trajectory
   builder, cuts and landings, and the trajectories of RTH plan entries.
 - Time axes, screenplays and the show controller.
+
+<!-- Links to the tags; cargo-release updates them (see release.toml) -->
+[Unreleased]: https://github.com/skybrush-io/libskybrush-rs/commits/main
