@@ -108,3 +108,22 @@ fn replacing_the_screenplay_with_one_sharing_the_scene_keeps_the_players() {
     let warped = ctrl.current_output_time().warped_time_in_scene_sec;
     assert!((warped - 10.5).abs() < 1e-3);
 }
+
+#[test]
+fn updates_beyond_i32_max_do_not_spoil_the_cache() {
+    let show = oracle::read_bytes("format/basic_show_with_yaw.skyb");
+    let file = BinaryFile::new(&show).unwrap();
+    let mut ctrl = ShowController::new(Screenplay::from_binary_file(&file).unwrap());
+    ctrl.update_time_msec(5000);
+    assert!(ctrl.current_output().position().is_some());
+
+    let beyond = u32::try_from(i32::MAX).unwrap() + 1;
+    ctrl.update_time_msec(beyond);
+    assert!(ctrl.has_reached_end());
+    assert_eq!(ctrl.current_output_time().time_msec, beyond);
+
+    // Back to the earlier time, the output is computed again
+    ctrl.update_time_msec(5000);
+    assert!(!ctrl.has_reached_end());
+    assert!(ctrl.current_output().position().is_some());
+}

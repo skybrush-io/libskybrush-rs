@@ -15,13 +15,16 @@
 # uncommitted changes in the sibling checkouts do not reach the oracle.
 #
 # To update the oracle, change the pins below, run the script and review the
-# differences in tests/oracle before committing them.
+# differences in tests/oracle before committing them. libskybrush is pinned to
+# a release tag and the commit it points to; between releases, the tag may be
+# empty, and the commit alone is the pin.
 
 set -euo pipefail
 
 LIBSKYBRUSH_URL=https://github.com/skybrush-io/libskybrush.git
-LIBSKYBRUSH_TAG=6.0.1
-LIBSKYBRUSH_COMMIT=f6b5117c7eac9febf5e4a0118185c8708115974a
+# Unreleased fixes of the show controller after 6.0.2
+LIBSKYBRUSH_TAG=
+LIBSKYBRUSH_COMMIT=24196148ac8dd9d7e40ea5bcd27536badd069cdc
 
 SPEC_URL=https://github.com/skybrush-io/file-formats-doc.git
 SPEC_COMMIT=710666990d718873a8d1d45e79f778fefe32f26f
@@ -81,13 +84,22 @@ extract() {
     | tar -x -C "$dest" --strip-components "$depth"
 }
 
+if [ -n "$LIBSKYBRUSH_TAG" ]; then
+  libskybrush_ref="refs/tags/$LIBSKYBRUSH_TAG"
+  libskybrush_pin="$LIBSKYBRUSH_COMMIT (tag $LIBSKYBRUSH_TAG)"
+else
+  libskybrush_ref="$LIBSKYBRUSH_COMMIT"
+  libskybrush_pin="$LIBSKYBRUSH_COMMIT (no release)"
+fi
 libskybrush=$(repo_with_commit libskybrush "$LIBSKYBRUSH_REPO" \
-  "$LIBSKYBRUSH_URL" "refs/tags/$LIBSKYBRUSH_TAG" "$LIBSKYBRUSH_COMMIT")
+  "$LIBSKYBRUSH_URL" "$libskybrush_ref" "$LIBSKYBRUSH_COMMIT")
 spec=$(repo_with_commit spec "$SPEC_REPO" "$SPEC_URL" "$SPEC_COMMIT" "$SPEC_COMMIT")
 
-verify_tag "$libskybrush" "$LIBSKYBRUSH_TAG" "$LIBSKYBRUSH_COMMIT"
+if [ -n "$LIBSKYBRUSH_TAG" ]; then
+  verify_tag "$libskybrush" "$LIBSKYBRUSH_TAG" "$LIBSKYBRUSH_COMMIT"
+fi
 git -C "$libskybrush" cat-file -e "$LIBSKYBRUSH_COMMIT^{commit}" 2>/dev/null \
-  || die "the tag $LIBSKYBRUSH_TAG does not point to $LIBSKYBRUSH_COMMIT"
+  || die "$libskybrush_ref does not point to $LIBSKYBRUSH_COMMIT"
 
 staging="$work/oracle"
 extract "$spec" "$SPEC_COMMIT" spec/skyb/conformance "$staging/conformance"
@@ -126,7 +138,7 @@ conformance/    $SPEC_URL $SPEC_COMMIT
                 spec/skyb/conformance
 format/         $SPEC_URL $SPEC_COMMIT
                 spec/skyb/traces
-api/            $LIBSKYBRUSH_URL $LIBSKYBRUSH_COMMIT (tag $LIBSKYBRUSH_TAG)
+api/            $LIBSKYBRUSH_URL $libskybrush_pin
                 test/api_traces, without the generators
 #
 # The API traces of <name>.json are computed from test/fixtures/<name>.skyb of

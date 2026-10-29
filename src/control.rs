@@ -384,16 +384,15 @@ impl<'a> ShowController<'a> {
             return;
         }
 
-        let Ok(wall_clock_time_msec) = i32::try_from(time_msec) else {
-            // Time axes take an i32. As in the C library, the time of the
-            // output is left as it is.
-            self.output = self.default_output;
-            self.reached_end = true;
-            return;
-        };
-
-        let found = self.screenplay.scene_at_time_msec(time_msec);
-        let scene_index = found.map(|(index, _)| index);
+        // Time axes take an i32; later times are handled like times between
+        // scenes
+        let found = i32::try_from(time_msec)
+            .ok()
+            .and_then(|wall_clock_time_msec| {
+                let (index, scene) = self.screenplay.scene_at_time_msec(time_msec)?;
+                Some((index, scene, wall_clock_time_msec))
+            });
+        let scene_index = found.map(|(index, _, _)| index);
         if scene_index != self.current_scene {
             // The players of another scene start from scratch
             self.players = Players::none();
@@ -404,7 +403,7 @@ impl<'a> ShowController<'a> {
         self.output_time.invalidate();
         self.reached_end = false;
 
-        let Some((_, scene)) = found else {
+        let Some((_, scene, wall_clock_time_msec)) = found else {
             // After the end of the show, or between scenes
             self.output = self.default_output;
             self.reached_end = true;
