@@ -22,12 +22,15 @@ use std::cell::Cell;
 use std::hint::black_box;
 
 use common::oracle;
+use skybrush::control::ShowController;
 use skybrush::events::{EventList, EventListPlayer};
 use skybrush::formats::binary::BinaryFile;
 use skybrush::gcs_light_control::GcsLightControlSetup;
 use skybrush::lights::{LightPlayer, LightProgram};
 use skybrush::metadata::ShowMetadata;
 use skybrush::rth_plan::RthPlan;
+use skybrush::screenplay::Screenplay;
+use skybrush::time_axis::TimeSegment;
 use skybrush::trajectory::{Trajectory, TrajectoryPlayer, TrajectoryStatsCalculator};
 use skybrush::yaw_control::{YawControl, YawPlayer};
 
@@ -193,6 +196,38 @@ fn events_are_played_without_allocating() {
         black_box(player.peek_next_event());
     });
     assert_eq!(count, 0, "firing the events allocated");
+}
+
+#[test]
+fn shows_are_played_without_allocating() {
+    for name in ["pyro_events", "basic_show_with_yaw", "real_show"] {
+        let show = oracle::read_bytes(&format!("format/{name}.skyb"));
+        let file = BinaryFile::new(&show).unwrap();
+        let mut screenplay = Screenplay::from_binary_file(&file).unwrap();
+        // A second scene that shares the components of the first one, so
+        // that the controller changes scenes
+        let first = screenplay.scene(0).unwrap().clone();
+        let scene = screenplay.scene_mut(0).unwrap();
+        scene.set_duration_msec(30_000);
+        let second = screenplay.append_new_scene().unwrap();
+        second.update_contents_from(&first);
+        second.set_origin_msec(30_000).unwrap();
+        second
+            .time_axis_mut()
+            .append_segment(TimeSegment::constant_rate(10_000, 2.0))
+            .unwrap();
+        let mut ctrl = ShowController::new(screenplay);
+        let count = allocations_of(|| {
+            for step in (0..=1500_u32).chain((0..=1500).rev()) {
+                ctrl.update_time_msec(step * 100);
+                black_box(ctrl.current_output());
+                while let Some(event) = ctrl.next_event() {
+                    black_box(event);
+                }
+            }
+        });
+        assert_eq!(count, 0, "{name}: playing the show allocated");
+    }
 }
 
 #[test]

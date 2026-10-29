@@ -1,11 +1,2 @@
 # Known failures of the format_traces runner, one item per line.
 # The list may only shrink; see tests/common/ratchet.rs.
-basic_show_with_yaw/show_controller
-forward_left_back/show_controller
-forward_left_back_v2/show_controller
-hover_3m_with_gcs_control_block/show_controller
-hover_3m_with_rth_plan/show_controller
-light_program_with_wait_until_cmd/show_controller
-multiple_vertical_landing_segments/show_controller
-pyro_events/show_controller
-real_show/show_controller

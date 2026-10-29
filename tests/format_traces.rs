@@ -16,6 +16,8 @@ mod common;
 mod light_program;
 #[path = "format_traces/rth_plan.rs"]
 mod rth_plan;
+#[path = "format_traces/show_controller.rs"]
+mod show_controller;
 #[path = "format_traces/stats.rs"]
 mod stats;
 #[path = "format_traces/trajectory.rs"]
@@ -126,6 +128,7 @@ fn replay_section(section: &str, show: &[u8], golden: &Map<String, Value>) -> Re
                 None => Replay::Absent,
             }
         }
+        "show_controller" => show_controller::replay(&file, golden),
         "num_samples" => Replay::Present(json!(num_samples(&file, golden))),
         "stats" => {
             let trajectory = Trajectory::from_binary_file(&file).expect("valid trajectory");

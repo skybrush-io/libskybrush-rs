@@ -4,6 +4,7 @@
 #![allow(dead_code)]
 
 pub mod compare;
+pub mod control;
 pub mod errors;
 pub mod events;
 pub mod lights;

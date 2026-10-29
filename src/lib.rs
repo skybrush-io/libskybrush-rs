@@ -12,6 +12,7 @@ extern crate alloc;
 
 pub mod basic_types;
 pub mod colors;
+pub mod control;
 mod crc32;
 pub mod events;
 pub mod formats;

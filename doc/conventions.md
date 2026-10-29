@@ -195,6 +195,9 @@ not be idiomatic Rust:
 | `sb_screenplay_get_scene_ptr_at_time_msec(&s, t, &i)` | `s.scene_at_time_msec(t)` | Returns the index and the scene together |
 | `sb_time_axis_map_ex(&a, t, &rate)` | `a.map_with_rate(t)` | Returns the warped time and the rate together |
 | `sb_time_axis_swap(&a, &b)` | `core::mem::swap(&mut a, &mut b)` | Not needed in Rust |
+| `sb_control_output_get_X_if_set(&o, &x)` | `o.X()` | Returns an `Option` |
+| `sb_show_controller_init(&c, &screenplay)` | `ShowController::new(screenplay)` | The controller owns the screenplay |
+| `sb_show_controller_notify_screenplay_changed(&c)` | `c.screenplay_mut()` | The screenplay is modified through the controller |
 
 Fields keep their C names too. A C name that is a Rust keyword is prefixed
 with the name of the type: the `type` of `sb_event_t` is `Event::event_type`.

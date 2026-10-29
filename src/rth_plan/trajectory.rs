@@ -5,7 +5,7 @@ use core::{error, fmt};
 use libm::{ceilf, fabsf};
 
 use super::{RthPlanEntry, RthPlanEntryFlags};
-use crate::basic_types::{Vector3, Vector3WithYaw};
+use crate::basic_types::Vector3;
 use crate::trajectory::{Trajectory, TrajectoryBuilder, TrajectoryBuilderError, TrajectoryError};
 
 /// The largest scale of a trajectory.
@@ -107,12 +107,7 @@ impl Trajectory<'static> {
         } else {
             entry.time_sec
         };
-        let start = Vector3WithYaw {
-            x: start.x,
-            y: start.y,
-            z: start.z,
-            yaw: 0.0,
-        };
+        let start = start.with_yaw(0.0);
 
         let mut builder = TrajectoryBuilder::new(scale)?;
         builder.set_start_position(start)?;

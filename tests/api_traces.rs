@@ -20,6 +20,8 @@ mod builder;
 #[path = "api_traces/colors.rs"]
 mod colors;
 mod common;
+#[path = "api_traces/control.rs"]
+mod control;
 #[path = "api_traces/edit.rs"]
 mod edit;
 #[path = "api_traces/events.rs"]
@@ -209,6 +211,7 @@ fn replay_scenarios(section: &str, golden: &Map<String, Value>) -> Replay {
         "event_lists" => events::replay_scenarios(&golden[section]),
         "rth_conversions" => rth_plan::replay_conversions(&golden[section]),
         "empty_rth_plan" => rth_plan::replay_empty_plan(),
+        "screenplays" => control::replay_screenplays(&golden[section]),
         "screenplay_queries" => screenplay::replay_queries(&golden[section]),
         "time_axes" => time_axis::replay_time_axes(&golden[section]),
         "time_axis_editing" => time_axis::replay_editing(&golden[section]),

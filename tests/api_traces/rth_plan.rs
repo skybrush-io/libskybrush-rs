@@ -107,12 +107,7 @@ pub fn replay_trajectories(
             continue;
         }
         last_entry_time = entry.time_sec;
-        let position = player.position_at(entry.time_sec);
-        let start = Vector3 {
-            x: position.x,
-            y: position.y,
-            z: position.z,
-        };
+        let start = player.position_at(entry.time_sec).xyz();
         let mut item = Map::new();
         item.insert("entry_time_sec".into(), json!(entry.time_sec));
         item.insert("start_mm".into(), json!([start.x, start.y, start.z]));

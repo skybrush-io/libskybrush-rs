@@ -37,3 +37,17 @@ The crate uses `u64` milliseconds (`LightPlayer::seek` and
 `LightPlayer::color_at` take `u64` timestamps). Fixing this in C needs
 a change of the public API (`unsigned long` appears in the signatures of
 `lights.h`), so it is left for the next major version of the C library.
+
+## Show controller
+
+### The players follow the components of the current scene
+
+In C, the show controller creates the players of a scene when the scene
+becomes the current one, and keeps them until another scene does; replacing
+the trajectory, the light program, the yaw control or the events of the
+current scene has no effect until then. In Rust, the controller checks the
+components of the current scene at every update and creates a new player for
+a component that was replaced. Players whose component did not change keep
+their state, so that modifying the screenplay, e.g. to pause the show by
+adding segments to the time axis, does not fire the events of the scene
+again. See `tests/show_controller.rs`.

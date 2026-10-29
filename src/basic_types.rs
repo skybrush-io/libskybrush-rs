@@ -38,6 +38,36 @@ pub struct Vector3 {
     pub z: f32,
 }
 
+impl Vector3 {
+    /// The zero vector.
+    pub const ZERO: Self = Self {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
+    /// The vector with the given yaw angle.
+    #[must_use]
+    pub const fn with_yaw(self, yaw: f32) -> Vector3WithYaw {
+        Vector3WithYaw {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+            yaw,
+        }
+    }
+
+    /// The vector multiplied by a scalar.
+    #[must_use]
+    pub const fn scaled(self, factor: f32) -> Self {
+        Self {
+            x: self.x * factor,
+            y: self.y * factor,
+            z: self.z * factor,
+        }
+    }
+}
+
 /// A 3D vector with a yaw angle.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Vector3WithYaw {
@@ -49,6 +79,18 @@ pub struct Vector3WithYaw {
     pub z: f32,
     /// The yaw angle.
     pub yaw: f32,
+}
+
+impl Vector3WithYaw {
+    /// The vector without the yaw.
+    #[must_use]
+    pub const fn xyz(self) -> Vector3 {
+        Vector3 {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+        }
+    }
 }
 
 /// The bounding box of a set of 3D points.
