@@ -1,0 +1,66 @@
+[package]
+name = "skybrush-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+# Not a member of the workspace of the crate
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.skybrush]
+path = ".."
+
+[[bin]]
+name = "show_file"
+path = "fuzz_targets/show_file.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "trajectory"
+path = "fuzz_targets/trajectory.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "light_program"
+path = "fuzz_targets/light_program.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "yaw_control"
+path = "fuzz_targets/yaw_control.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "event_list"
+path = "fuzz_targets/event_list.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rth_plan"
+path = "fuzz_targets/rth_plan.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tlv"
+path = "fuzz_targets/tlv.rs"
+test = false
+doc = false
+bench = false
