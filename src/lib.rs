@@ -59,7 +59,7 @@
 //! // What the drone should do 2.5 s into the show
 //! controller.update_time_msec(2500);
 //! let output = controller.current_output();
-//! let position = output.position().expect("the show has a trajectory");
+//! let position = output.position().ok_or("the show has no trajectory")?;
 //! assert!(position.z > 0.0 && position.z < 5000.0);
 //!
 //! // Fire the events that are due by then
@@ -72,6 +72,32 @@
 //!
 //! Positions are in millimeters, times in milliseconds or seconds as the
 //! names of the functions tell, and angles in degrees.
+//!
+//! # Design notes
+//!
+//! A few choices follow from the firmware that the crate is written for, and
+//! differ from what is usual in Rust crates:
+//!
+//! - **Threads.** A flight controller module runs on a single thread, so
+//!   scenes share their components through [`Rc`](alloc::rc::Rc): a
+//!   [`Screenplay`](screenplay::Screenplay) and the
+//!   [`ShowController`](control::ShowController) are neither `Send` nor
+//!   `Sync`, and stay on the thread that created them. The components read
+//!   from a show file are `Send` and `Sync`. Trajectory players are `Send`
+//!   but not `Sync`, since trajectory segments cache their polynomials in a
+//!   [`OnceCell`](core::cell::OnceCell).
+//! - **Units.** Times, distances and angles are plain numbers (`u32`
+//!   milliseconds, `f32` seconds, millimeters and degrees) with the unit in
+//!   the name, as in the C library, rather than types such as
+//!   [`Duration`](core::time::Duration).
+//! - **Allocation.** Memory is allocated when a show is loaded, and a failed
+//!   allocation is reported as an error instead of aborting. Therefore the
+//!   collections do not implement `FromIterator` and `Extend`, which cannot
+//!   report it; they have methods that return a `Result` instead.
+//! - **Missing values** are `None`, except where infinity is the
+//!   mathematical answer (e.g. the travel time at zero speed, or an
+//!   acceleration without a limit) and in the fields of
+//!   [`RthPlanEntry`](rth_plan::RthPlanEntry), which follow the file format.
 //!
 //! [Skybrush]: https://skybrush.io
 //! [libskybrush]: https://github.com/skybrush-io/libskybrush

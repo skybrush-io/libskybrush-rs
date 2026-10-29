@@ -2,7 +2,9 @@
 
 How the crate is organised and the rules its code follows. The background
 (why the crate exists, the module runtime of the flight controller and the
-test oracle) is in `CLAUDE.md`; this document does not repeat it.
+test oracle) is in `CLAUDE.md`; this document does not repeat it. Where the
+public API departs from the Rust API guidelines, and why, is in
+`rust-api-deviations.md`.
 
 ## Module layout
 

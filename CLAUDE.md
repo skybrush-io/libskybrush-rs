@@ -29,7 +29,10 @@ What the module runtime implies (from the PR; re-check if it changes):
 - **Idiomatic Rust over C conventions.** API quirks of the C library may be
   fixed. Prefer plain ownership and borrowing; use `Rc` only where data is
   really shared (e.g. a trajectory used by several scenes). Errors are
-  `Result`s with error enums, not error codes.
+  `Result`s with error enums, not error codes. The public API follows the
+  [Rust API guidelines](https://rust-lang.github.io/api-guidelines/checklist.html);
+  deliberate deviations are recorded in `doc/rust-api-deviations.md`, with
+  the reasons. Add an entry whenever the API departs from them on purpose.
 - **`#![no_std]` + `alloc`.** No `std`, also not in the library's dependencies.
   Math functions come from the `libm` crate (`core` has no `powf`, `sqrtf`...).
 - **No panics on malformed input.** `unwrap`, `expect`, `panic!` and slice
