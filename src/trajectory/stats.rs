@@ -83,7 +83,7 @@ pub struct LandingStats {
 
 /// Why the statistics of a trajectory could not be calculated: a setting of
 /// the calculator is invalid.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum TrajectoryStatsError {
     /// The acceleration is not positive.
@@ -486,7 +486,7 @@ mod tests {
         bytes.extend(1000_u16.to_le_bytes());
         bytes.extend(40_i16.to_le_bytes());
         bytes.extend(2970_i16.to_le_bytes());
-        Trajectory::from_bytes(bytes).unwrap()
+        Trajectory::from_vec(bytes).unwrap()
     }
 
     #[test]

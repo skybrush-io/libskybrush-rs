@@ -37,7 +37,7 @@ mod opcodes {
 }
 
 /// Why a light program could not be read or created.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum LightProgramError {
     /// The show file could not be read.
@@ -77,7 +77,7 @@ impl From<TryReserveError> for LightProgramError {
 }
 
 /// A light program: the bytecode of a light program block.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct LightProgram<'a> {
     bytes: Cow<'a, [u8]>,
 }
@@ -93,7 +93,7 @@ impl LightProgram<'static> {
 
     /// A light program that owns the given bytecode.
     #[must_use]
-    pub const fn from_bytes(bytes: Vec<u8>) -> Self {
+    pub const fn from_vec(bytes: Vec<u8>) -> Self {
         Self {
             bytes: Cow::Owned(bytes),
         }

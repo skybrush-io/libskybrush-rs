@@ -12,7 +12,7 @@ use crate::trajectory::{Trajectory, TrajectoryBuilder, TrajectoryBuilderError, T
 const MAX_SCALE: u8 = 127;
 
 /// Why an RTH plan entry could not be converted to a trajectory.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum RthTrajectoryError {
     /// A coordinate is too large for any scale of a trajectory.

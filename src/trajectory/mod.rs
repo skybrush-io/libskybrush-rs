@@ -36,7 +36,7 @@ use segment::{coords_length, msec_to_sec};
 const HEADER_LENGTH: usize = 9;
 
 /// Why a trajectory could not be read.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum TrajectoryError {
     /// The body of the trajectory block is malformed: it is shorter than the
@@ -82,7 +82,7 @@ impl From<BinaryFileError> for TrajectoryError {
 /// store the few modified or appended segments at the end inline, in a small
 /// fixed buffer. A cut rewrites at most one segment and a landing appends one,
 /// so this would need no allocation, at the cost of a more complex player.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Trajectory<'a> {
     /// The header and the segments, as in the body of a trajectory block.
     bytes: Cow<'a, [u8]>,
@@ -122,7 +122,7 @@ impl Trajectory<'static> {
     /// # Errors
     ///
     /// Returns [`TrajectoryError::Corrupted`] if the body is malformed.
-    pub fn from_bytes(bytes: Vec<u8>) -> Result<Self, TrajectoryError> {
+    pub fn from_vec(bytes: Vec<u8>) -> Result<Self, TrajectoryError> {
         Self::from_cow(Cow::Owned(bytes))
     }
 }

@@ -62,13 +62,11 @@ fn borrowed_and_owned_trajectories_land_alike() {
             let target = vector3_of(&case["target_mm"]);
             let velocity = f32_of(&case["landing_velocity_mm_s"]);
             let (mut owned, mut view) = (borrowed.clone().into_owned(), borrowed.clone());
-            let (mut owned_stats, mut view_stats) = (stats, stats);
-            let owned_result = owned.replace_end_to_land_at(&mut owned_stats, target, velocity);
-            let view_result = view.replace_end_to_land_at(&mut view_stats, target, velocity);
+            let owned_result = owned.replace_end_to_land_at(&stats, target, velocity);
+            let view_result = view.replace_end_to_land_at(&stats, target, velocity);
             let label = format!("{name}: {}", case["case"]);
             assert_eq!(owned_result, view_result, "{label}");
             assert_eq!(owned.bytes(), view.bytes(), "{label}");
-            assert_eq!(owned_stats, view_stats, "{label}");
         }
     }
 }

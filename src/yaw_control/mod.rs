@@ -26,7 +26,7 @@ const HEADER_LENGTH: usize = 3;
 const DELTA_LENGTH: usize = 4;
 
 /// Why a yaw control object could not be read or created.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum YawControlError {
     /// The body of the yaw control block is malformed: it is shorter than the
@@ -71,7 +71,7 @@ impl From<TryReserveError> for YawControlError {
 
 /// The yaw control of a show: a yaw offset and a list of relative yaw changes
 /// (deltas), each with a duration.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct YawControl<'a> {
     /// The header and the deltas, as in the body of a yaw control block.
     bytes: Cow<'a, [u8]>,
@@ -104,7 +104,7 @@ impl YawControl<'static> {
     /// # Errors
     ///
     /// Returns [`YawControlError::Corrupted`] if the body is malformed.
-    pub fn from_bytes(bytes: Vec<u8>) -> Result<Self, YawControlError> {
+    pub fn from_vec(bytes: Vec<u8>) -> Result<Self, YawControlError> {
         Self::from_cow(Cow::Owned(bytes))
     }
 }
@@ -211,7 +211,7 @@ impl<'a> YawControl<'a> {
         let mut bytes = Vec::new();
         bytes.try_reserve_exact(HEADER_LENGTH)?;
         bytes.extend_from_slice(&[0, low, high]);
-        *self = YawControl::from_bytes(bytes)?;
+        *self = YawControl::from_vec(bytes)?;
         Ok(())
     }
 

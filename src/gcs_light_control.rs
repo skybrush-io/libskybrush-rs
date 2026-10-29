@@ -6,7 +6,7 @@ use core::{error, fmt};
 
 use crate::basic_types::Vector2I16;
 use crate::formats::binary::{BinaryBlockType, BinaryFile, BinaryFileError};
-use crate::formats::tlv::{TlvEntry, TlvParser};
+use crate::formats::tlv::{TlvEntries, TlvEntry};
 use crate::palette::ColorPalette;
 
 /// The tags of the entries of a GCS light control setup block.
@@ -20,7 +20,7 @@ mod tags {
 const MAX_COMPONENT_VALUE: i16 = 4095;
 
 /// Why the setup of light control from the ground station could not be read.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum GcsLightControlSetupError {
     /// The body of the block is not a valid tag-length-value stream, a known
@@ -91,7 +91,7 @@ impl<'a> GcsLightControlSetup<'a> {
     /// malformed.
     pub fn from_buffer(body: &'a [u8]) -> Result<Self, GcsLightControlSetupError> {
         let mut result = GcsLightControlSetup::new();
-        for entry in TlvParser::new(body) {
+        for entry in TlvEntries::new(body) {
             let entry = entry.map_err(|_| GcsLightControlSetupError::Corrupted)?;
             match entry.tag {
                 tags::COORDINATES => result.coords = parse_vector2_i16(entry)?,

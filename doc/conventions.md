@@ -181,6 +181,7 @@ type is listed here, so that the mapping stays mechanical:
 | C | Rust | Why |
 |---|---|---|
 | `sb_binary_file_parser_t` | `BinaryFile` | A validated view of a show file; reading the blocks is an iterator, not state of the parser |
+| `sb_tlv_parser_t` | `TlvEntries` | An iterator over the entries of a stream, named like the iterators of the standard library |
 
 On top of that, the following rules apply, and only these:
 
@@ -203,8 +204,13 @@ not be idiomatic Rust:
 | C | Rust | Why |
 |---|---|---|
 | `sb_trajectory_update_from_builder(&t, &builder)` | `builder.build()` | A builder finishes with `build()`, which consumes it |
+| `sb_T_update_from_bytes(&t, bytes, n)` | `T::from_vec(bytes)` | It takes ownership of a `Vec`; `from_bytes` would suggest a borrowed slice, as in the standard library |
+| `sb_poly_make_zero(&p)`, `sb_poly_4d_make_zero(&p)` | `Poly::ZERO`, `Poly4D::ZERO` | Constants, like `Vector3::ZERO` |
+| `sb_poly_eval_double(&p, t)` | `p.eval_f64(t)` | Named after the Rust type, like `Event::payload_f32` |
+| `sb_trajectory_replace_end_to_land_at(&t, &stats, ...)`, and the variant `_with_terminal_velocity` | `stats = t.replace_end_to_land_at(&stats, ...)?` | Returns the updated statistics instead of writing them back |
 | `sb_event_list_get_ptr(&t, i)`, `sb_event_list_get_ptr_const(&t, i)` | `t.get_mut(i)`, `t.get(i)` | The names of slices and `Vec` |
-| `sb_rth_plan_entry_clear(&e, plan, t)` | `RthPlanEntry::new(plan, t)` | It sets every field, so it creates an entry rather than clearing one |
+| `sb_rth_plan_entry_clear(&e, plan, t)` | `RthPlanEntry::land_in_place_with_defaults(plan, t)`, or `RthPlanEntry::land_in_place(t)` without a plan | It sets every field, so it creates an entry rather than clearing one; the plan is optional in C |
+| `sb_rth_plan_get_default_landing_velocity(&p)`, `sb_rth_plan_has_default_landing_velocity(&p)` | `p.default_landing_velocity()` | Returns an `Option` |
 | `sb_screenplay_get_scene_ptr(&s, i)` | `s.scene(i)`, `s.scene_mut(i)` | Scenes are returned by reference, not by pointer |
 | `sb_screenplay_get_scene_ptr_at_time_msec(&s, t, &i)` | `s.scene_at_time_msec(t)` | Returns the index and the scene together |
 | `sb_time_axis_map_ex(&a, t, &rate)` | `a.map_with_rate(t)` | Returns the warped time and the rate together |

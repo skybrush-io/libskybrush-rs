@@ -185,6 +185,28 @@ macro_rules! impl_vector_ops {
 impl_vector_ops!(Vector3 { x, y, z });
 impl_vector_ops!(Vector3WithYaw { x, y, z, yaw });
 
+/// Implements the conversions between a vector type with the given fields
+/// and an array of its components, in the order of the fields.
+macro_rules! impl_array_conversions {
+    ($type:ident [$n:literal] { $($field:ident),+ }) => {
+        impl From<[f32; $n]> for $type {
+            fn from([$($field),+]: [f32; $n]) -> Self {
+                Self { $($field),+ }
+            }
+        }
+
+        impl From<$type> for [f32; $n] {
+            fn from(vector: $type) -> Self {
+                [$(vector.$field),+]
+            }
+        }
+    };
+}
+
+impl_array_conversions!(Vector2 [2] { x, y });
+impl_array_conversions!(Vector3 [3] { x, y, z });
+impl_array_conversions!(Vector3WithYaw [4] { x, y, z, yaw });
+
 /// The bounding box of a set of 3D points.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct BoundingBox {
@@ -229,6 +251,17 @@ mod tests {
         assert_eq!(A * 2.0 / 2.0, A);
         assert_eq!((A + B).xyz(), A.xyz() + B.xyz());
         assert_eq!((A * 3.0).xyz(), 3.0 * A.xyz());
+    }
+
+    #[test]
+    fn conversions_to_and_from_arrays() {
+        assert_eq!(Vector3WithYaw::from([1.0, -2.0, 4.0, 90.0]), A);
+        assert_eq!(<[f32; 4]>::from(B), [0.5, 3.0, -1.0, -30.0]);
+        assert_eq!(
+            <[f32; 3]>::from(Vector3::from([1.0, 2.0, 3.0])),
+            [1.0, 2.0, 3.0]
+        );
+        assert_eq!(Vector2::from([1.0, 2.0]), Vector2 { x: 1.0, y: 2.0 });
     }
 
     #[test]

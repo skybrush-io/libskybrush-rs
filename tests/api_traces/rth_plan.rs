@@ -36,6 +36,12 @@ pub fn replay_queries(plan: Option<RthPlan<'_>>) -> Replay {
     let Some(mut plan) = plan else {
         return Replay::Absent;
     };
+    assert_eq!(
+        plan.points().collect::<Vec<_>>(),
+        (0..plan.num_points())
+            .map(|index| plan.point(index).expect("a point"))
+            .collect::<Vec<_>>(),
+    );
     let points: Vec<Value> = (0..=plan.num_points())
         .map(|index| match plan.point(index) {
             Some(point) => {
@@ -59,8 +65,9 @@ pub fn replay_queries(plan: Option<RthPlan<'_>>) -> Replay {
         "is_empty": plan.is_empty(),
         "default_acceleration_limit_mm_s2": plan.default_acceleration_limit(),
         "default_landing_altitude_mm": plan.default_landing_altitude(),
+        // The oracle records the NaN of the C library as null
         "default_landing_velocity_mm_s": plan.default_landing_velocity(),
-        "has_default_landing_velocity": plan.has_default_landing_velocity(),
+        "has_default_landing_velocity": plan.default_landing_velocity().is_some(),
         "points": points,
         "evaluate_at": evaluate_at,
     });
@@ -75,7 +82,7 @@ pub fn replay_queries(plan: Option<RthPlan<'_>>) -> Replay {
     );
     after.insert(
         "has_default_landing_velocity".into(),
-        json!(plan.has_default_landing_velocity()),
+        json!(plan.default_landing_velocity().is_some()),
     );
     let mut at_20_sec = evaluation(&plan, 20.0);
     if let Some(result) = at_20_sec.remove("result") {

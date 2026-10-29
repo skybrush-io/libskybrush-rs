@@ -70,7 +70,7 @@ pub fn replay_landings(trajectory: Option<&Trajectory<'_>>, golden: &Value) -> R
 
 fn landing(original: &Trajectory<'_>, case: &Value) -> Value {
     let mut trajectory = original.clone();
-    let mut stats = TrajectoryStatsCalculator::new(1000.0)
+    let stats = TrajectoryStatsCalculator::new(1000.0)
         .run(&trajectory)
         .expect("the default settings are valid");
     let original_landing_msec =
@@ -81,10 +81,10 @@ fn landing(original: &Trajectory<'_>, case: &Value) -> Value {
     // null stands for NaN here: the variant without a terminal velocity
     let terminal_velocity = &case["terminal_velocity_mm_s"];
     let result = if terminal_velocity.is_null() {
-        trajectory.replace_end_to_land_at(&mut stats, target, landing_velocity)
+        trajectory.replace_end_to_land_at(&stats, target, landing_velocity)
     } else {
         trajectory.replace_end_to_land_at_with_terminal_velocity(
-            &mut stats,
+            &stats,
             target,
             landing_velocity,
             f32_of(terminal_velocity),
@@ -104,6 +104,8 @@ fn landing(original: &Trajectory<'_>, case: &Value) -> Value {
     // Recorded on failure as well; the trajectory must be left intact then
     let duration_msec = trajectory.total_duration_msec();
     actual.insert("duration_ms".to_owned(), json!(duration_msec));
+    // The statistics are left intact on failure
+    let stats = result.as_ref().map_or(stats, |new_stats| *new_stats);
     actual.insert("stats".to_owned(), values::stats(&stats));
     if result.is_ok() {
         actual.extend(trajectory_samples(

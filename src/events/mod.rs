@@ -8,6 +8,7 @@
 mod player;
 
 use alloc::collections::TryReserveError;
+use alloc::vec::IntoIter;
 use alloc::vec::Vec;
 use core::slice::Iter;
 use core::{error, fmt};
@@ -42,7 +43,7 @@ impl EventType {
 }
 
 /// An event that is triggered at a time instant of the show.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Event {
     /// The time when the event is triggered, in milliseconds.
     pub time_msec: u32,
@@ -95,7 +96,7 @@ impl Event {
 }
 
 /// Why an event list could not be read or modified.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum EventListError {
     /// The events of the event list block are not sorted by timestamp.
@@ -142,7 +143,11 @@ impl From<TryReserveError> for EventListError {
 }
 
 /// The events of a show, in increasing order of their timestamps.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+///
+/// The list does not implement `FromIterator` and `Extend`: they cannot
+/// report that memory could not be allocated. Add events with
+/// [`append`](Self::append) or [`insert`](Self::insert) instead, which do.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct EventList {
     events: Vec<Event>,
 }
@@ -401,6 +406,15 @@ impl<'a> IntoIterator for &'a EventList {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+impl IntoIterator for EventList {
+    type Item = Event;
+    type IntoIter = IntoIter<Event>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.events.into_iter()
     }
 }
 

@@ -42,6 +42,23 @@ pub struct TrajectorySegment {
     ddpoly: OnceCell<Poly4D>,
 }
 
+/// Segments are equal if they have the same times and control points; the
+/// polynomials that were calculated so far do not matter.
+impl PartialEq for TrajectorySegment {
+    fn eq(&self, other: &Self) -> bool {
+        self.start_time_msec == other.start_time_msec
+            && self.end_time_msec == other.end_time_msec
+            && self.duration_msec == other.duration_msec
+            && self.start_time_sec == other.start_time_sec
+            && self.end_time_sec == other.end_time_sec
+            && self.duration_sec == other.duration_sec
+            && self.start == other.start
+            && self.end == other.end
+            && self.points == other.points
+            && self.num_points == other.num_points
+    }
+}
+
 impl TrajectorySegment {
     /// The segment after the end of a trajectory (or of an empty one), which
     /// holds the given position forever.
@@ -241,4 +258,30 @@ impl TrajectorySegment {
 )]
 pub(crate) fn msec_to_sec(msec: u32) -> f32 {
     msec as f32 / 1000.0
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::basic_types::Vector3WithYaw;
+    use crate::trajectory::{TrajectoryBuilder, TrajectoryPlayer};
+
+    #[test]
+    fn equality_ignores_the_calculated_polynomials() {
+        let mut builder = TrajectoryBuilder::new(1).unwrap();
+        builder
+            .set_start_position(Vector3WithYaw::default())
+            .unwrap();
+        let target = Vector3WithYaw {
+            x: 1000.0,
+            ..Vector3WithYaw::default()
+        };
+        builder.append_line(target, 1000).unwrap();
+        let trajectory = builder.build().unwrap();
+
+        let player = TrajectoryPlayer::new(&trajectory);
+        let fresh = player.current_segment().clone();
+        let used = player.current_segment();
+        used.ddpoly();
+        assert_eq!(*used, fresh);
+    }
 }

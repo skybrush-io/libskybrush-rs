@@ -30,7 +30,7 @@ impl_flags!(ScreenplaySceneFlags);
 /// the scene for its duration.
 ///
 /// The components are reference counted, so that scenes can share them.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ScreenplayScene<'a> {
     /// The duration on the show clock, in milliseconds; `u32::MAX` means
     /// infinite.

@@ -166,31 +166,15 @@ impl ControlOutput {
 /// The time instant that a control output belongs to.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ControlOutputTime {
-    /// The time on the show clock, in milliseconds; `u32::MAX` if the output
-    /// is not valid.
+    /// The time on the show clock, in milliseconds.
     pub time_msec: u32,
     /// The index of the scene, or `None` if no scene was active.
     pub scene: Option<usize>,
-    /// The time since the origin of the scene, in milliseconds; `u32::MAX`
-    /// if the output is not valid.
+    /// The time since the origin of the scene, in milliseconds; zero if no
+    /// scene was active.
     pub time_in_scene_msec: u32,
-    /// The warped time of the scene, in seconds.
+    /// The warped time of the scene, in seconds; zero if no scene was active.
     pub warped_time_in_scene_sec: f32,
-}
-
-impl ControlOutputTime {
-    /// The time of an output that is not valid.
-    pub const INVALID: Self = Self {
-        time_msec: u32::MAX,
-        scene: None,
-        time_in_scene_msec: u32::MAX,
-        warped_time_in_scene_sec: 0.0,
-    };
-
-    /// Makes the time that of an output that is not valid.
-    pub const fn invalidate(&mut self) {
-        *self = Self::INVALID;
-    }
 }
 
 /// The players of the components of the current scene. Each player holds
@@ -299,7 +283,7 @@ fn sync_player<P, C>(
 /// scene.time_axis_mut().append_segment(TimeSegment::constant_rate(u32::MAX, 0.0))?;
 ///
 /// controller.update_time_msec(5000);
-/// let output_time = controller.current_output_time();
+/// let output_time = controller.current_output_time().ok_or("no valid output")?;
 /// assert_eq!(output_time.warped_time_in_scene_sec, 2.0);
 /// assert_eq!(controller.current_output().velocity().map(|v| v.x), Some(0.0));
 /// # Ok(())
@@ -314,7 +298,7 @@ pub struct ShowController<'a> {
     /// The output outside the scenes: zero velocity and zero yaw rate.
     default_output: ControlOutput,
     output: ControlOutput,
-    output_time: ControlOutputTime,
+    output_time: Option<ControlOutputTime>,
     reached_end: bool,
 }
 
@@ -332,7 +316,7 @@ impl<'a> ShowController<'a> {
             players: Players::none(),
             default_output,
             output: default_output,
-            output_time: ControlOutputTime::INVALID,
+            output_time: None,
             reached_end: false,
         }
     }
@@ -380,9 +364,11 @@ impl<'a> ShowController<'a> {
         &self.output
     }
 
-    /// The time that the current output belongs to.
+    /// The time that the current output belongs to, or `None` if the output
+    /// is not valid: before the first update, and after the screenplay was
+    /// changed.
     #[must_use]
-    pub const fn current_output_time(&self) -> ControlOutputTime {
+    pub const fn current_output_time(&self) -> Option<ControlOutputTime> {
         self.output_time
     }
 
@@ -396,14 +382,17 @@ impl<'a> ShowController<'a> {
     /// Whether the current output belongs to a time instant.
     #[must_use]
     pub const fn is_output_valid(&self) -> bool {
-        self.output_time.time_msec != u32::MAX
+        self.output_time.is_some()
     }
 
     /// Computes the output at the given time of the show clock, in
     /// milliseconds. Outside the scenes, the output is zero velocity and zero
     /// yaw rate.
     pub fn update_time_msec(&mut self, time_msec: u32) {
-        if self.is_output_valid() && time_msec == self.output_time.time_msec {
+        if self
+            .output_time
+            .is_some_and(|output_time| output_time.time_msec == time_msec)
+        {
             // The output is up to date
             return;
         }
@@ -424,19 +413,19 @@ impl<'a> ShowController<'a> {
         }
         // Invalidated field by field, since the scene borrows the screenplay
         self.output = self.default_output;
-        self.output_time.invalidate();
+        self.output_time = None;
         self.reached_end = false;
 
         let Some((_, scene, wall_clock_time_msec)) = found else {
             // After the end of the show, or between scenes
             self.output = self.default_output;
             self.reached_end = true;
-            self.output_time = ControlOutputTime {
+            self.output_time = Some(ControlOutputTime {
                 time_msec,
                 scene: None,
                 time_in_scene_msec: 0,
                 warped_time_in_scene_sec: 0.0,
-            };
+            });
             return;
         };
         self.players.sync(scene);
@@ -469,19 +458,21 @@ impl<'a> ShowController<'a> {
             output.set_yaw_rate(player.yaw_rate_at(warped_time_sec) * warped_rate);
         }
 
-        self.output_time = ControlOutputTime {
+        self.output_time = Some(ControlOutputTime {
             time_msec,
             scene: scene_index,
             time_in_scene_msec,
             warped_time_in_scene_sec: warped_time_sec,
-        };
+        });
     }
 
     /// Fires the next event of the current scene that is due at the time of
     /// the last update, and returns it. Call it until it returns `None` to
     /// fire every event that is due.
     pub fn next_event(&mut self) -> Option<&Event> {
-        let time_sec = self.output_time.warped_time_in_scene_sec;
+        let time_sec = self
+            .output_time
+            .map_or(0.0, |output_time| output_time.warped_time_in_scene_sec);
         self.players
             .events
             .as_mut()?
@@ -490,7 +481,7 @@ impl<'a> ShowController<'a> {
 
     fn invalidate_output(&mut self) {
         self.output = self.default_output;
-        self.output_time.invalidate();
+        self.output_time = None;
         self.reached_end = false;
     }
 }

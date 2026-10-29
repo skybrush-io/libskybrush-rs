@@ -65,25 +65,7 @@ pub struct BinaryBlock<'a> {
 }
 
 /// Why a show file could not be read.
-///
-/// # Examples
-///
-/// ```
-/// use skybrush::formats::binary::{BinaryBlockType, BinaryFile};
-///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// // A show file of version 1 with a single comment block
-/// let bytes = b"skyb\x01\x03\x05\x00hello";
-/// let file = BinaryFile::new(bytes)?;
-/// for block in file.blocks() {
-///     let block = block?;
-///     assert_eq!(block.block_type, BinaryBlockType::COMMENT);
-///     assert_eq!(block.body, b"hello");
-/// }
-/// # Ok(())
-/// # }
-/// ```
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum BinaryFileError {
     /// The file does not start with the signature `skyb`.
@@ -131,6 +113,24 @@ impl error::Error for BinaryFileError {}
 /// A Skybrush binary show file in memory, with a valid header.
 ///
 /// The counterpart of `sb_binary_file_parser_t` of the C library.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::formats::binary::{BinaryBlockType, BinaryFile};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // A show file of version 1 with a single comment block
+/// let bytes = b"skyb\x01\x03\x05\x00hello";
+/// let file = BinaryFile::new(bytes)?;
+/// for block in file.blocks() {
+///     let block = block?;
+///     assert_eq!(block.block_type, BinaryBlockType::COMMENT);
+///     assert_eq!(block.body, b"hello");
+/// }
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct BinaryFile<'a> {
     bytes: &'a [u8],

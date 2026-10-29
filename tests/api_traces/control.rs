@@ -59,10 +59,10 @@ fn add_scene(screenplay: &mut Screenplay<'static>, spec: &Value) -> Value {
     );
 
     let hex = |key: &str| decode_hex(spec[key].as_str().expect("hex"));
-    let trajectory = Trajectory::from_bytes(hex("trajectory_hex")).expect("trajectory");
+    let trajectory = Trajectory::from_vec(hex("trajectory_hex")).expect("trajectory");
     scene.set_trajectory(Some(Rc::new(trajectory)));
     result.insert("trajectory_hex".into(), spec["trajectory_hex"].clone());
-    scene.set_light_program(Some(Rc::new(LightProgram::from_bytes(hex(
+    scene.set_light_program(Some(Rc::new(LightProgram::from_vec(hex(
         "light_program_hex",
     )))));
     result.insert(
@@ -111,7 +111,9 @@ fn replay_sample(ctrl: &mut ShowController<'_>, sample: &Value) -> Value {
         .screenplay()
         .scene_at_time_msec(time_msec)
         .map_or(-1, |(index, _)| i64::try_from(index).expect("an index"));
-    let output_time = ctrl.current_output_time();
+    let output_time = ctrl
+        .current_output_time()
+        .expect("a valid output after an update");
     let mut result = output(ctrl.current_output());
     result.insert("time_ms".into(), json!(time_msec));
     result.insert("scene".into(), json!(scene));

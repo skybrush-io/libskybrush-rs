@@ -12,7 +12,7 @@ use skybrush::basic_types::Vector3;
 use skybrush::control::ShowController;
 use skybrush::events::{EventList, EventListPlayer, EventType};
 use skybrush::formats::binary::BinaryFile;
-use skybrush::formats::tlv::TlvParser;
+use skybrush::formats::tlv::TlvEntries;
 use skybrush::gcs_light_control::GcsLightControlSetup;
 use skybrush::lights::{LightPlayer, LightProgram};
 use skybrush::metadata::ShowMetadata;
@@ -78,7 +78,7 @@ pub fn trajectory(trajectory: &Trajectory<'_>) {
     black_box(trajectory.propose_landing_time_sec(2000.0, 1000.0));
 
     let calculator = TrajectoryStatsCalculator::new(1000.0);
-    let Ok(mut stats) = calculator.run(trajectory) else {
+    let Ok(stats) = calculator.run(trajectory) else {
         return;
     };
 
@@ -94,7 +94,7 @@ pub fn trajectory(trajectory: &Trajectory<'_>) {
         y: -2000.0,
         z: 0.0,
     };
-    let _ = black_box(copy.replace_end_to_land_at(&mut stats, target, 500.0));
+    let _ = black_box(copy.replace_end_to_land_at(&stats, target, 500.0));
     trajectory_player(&copy);
 
     let start = trajectory.start_position();
@@ -178,7 +178,7 @@ pub fn rth_plan(plan: &RthPlan<'_>, trajectory: Option<&Trajectory<'_>>) {
 }
 
 pub fn tlv(body: &[u8]) {
-    for entry in TlvParser::new(body) {
+    for entry in TlvEntries::new(body) {
         let _ = black_box(entry);
     }
     if let Ok(setup) = GcsLightControlSetup::from_buffer(body) {

@@ -107,7 +107,7 @@ fn encode(nodes: &[Node], unrolled: bool, out: &mut Vec<u8>) {
 type Observation = (u64, RgbColor, u64, bool);
 
 fn observe(bytes: Vec<u8>) -> Vec<Observation> {
-    let program = LightProgram::from_bytes(bytes);
+    let program = LightProgram::from_vec(bytes);
     let mut player = LightPlayer::new(&program);
     let mut result = Vec::new();
 
@@ -166,7 +166,7 @@ fn nested_loops_that_take_no_time_do_not_stall_the_player() {
     bytes.extend_from_slice(&[LOOP_END; 4]);
     bytes.extend_from_slice(&[SET_COLOR, 0, 255, 0, 50]);
 
-    let program = LightProgram::from_bytes(bytes);
+    let program = LightProgram::from_vec(bytes);
     let mut player = LightPlayer::new(&program);
     assert_eq!(player.color_at(0), RgbColor::new(0, 255, 0));
     assert_eq!(player.next_timestamp(), 1000);

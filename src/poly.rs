@@ -32,7 +32,7 @@ fn is_zero(value: f32) -> bool {
 }
 
 /// Why an operation on a polynomial failed.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum PolyError {
     /// The operation is not implemented for polynomials of this degree.
@@ -140,10 +140,10 @@ impl Poly {
     }
 
     /// The constant zero polynomial.
-    #[must_use]
-    pub fn zero() -> Self {
-        Self::constant(0.0)
-    }
+    pub const ZERO: Self = Self {
+        coeffs: [0.0; MAX_POLY_COEFFS],
+        num_coeffs: 1,
+    };
 
     /// A constant polynomial.
     #[must_use]
@@ -174,7 +174,7 @@ impl Poly {
     #[must_use]
     pub fn bezier(duration: f32, points: &[f32]) -> Self {
         match points {
-            [] => Self::zero(),
+            [] => Self::ZERO,
             [x] => Self::constant(*x),
             [x0, x1] => Self::linear(duration, *x0, *x1),
             _ => {
@@ -233,7 +233,7 @@ impl Poly {
 
     /// Evaluates the polynomial with Horner's rule in double precision.
     #[must_use]
-    pub fn eval_double(&self, t: f64) -> f64 {
+    pub fn eval_f64(&self, t: f64) -> f64 {
         self.coeffs()
             .iter()
             .rev()
@@ -333,7 +333,7 @@ impl Poly {
                 *coeff = 0.0;
             }
         } else {
-            *self = Self::zero();
+            *self = Self::ZERO;
         }
     }
 
@@ -604,10 +604,12 @@ impl Poly4D {
     }
 
     /// The constant zero 4D polynomial.
-    #[must_use]
-    pub fn zero() -> Self {
-        Self::constant(Vector3WithYaw::default())
-    }
+    pub const ZERO: Self = Self {
+        x: Poly::ZERO,
+        y: Poly::ZERO,
+        z: Poly::ZERO,
+        yaw: Poly::ZERO,
+    };
 
     /// Evaluates the polynomial along each coordinate.
     #[must_use]
@@ -687,10 +689,11 @@ mod tests {
         assert_eq!(poly.degree(), 0);
         for t in [0.0, -2.0, 1.0] {
             assert_eq!(poly.eval(t), 3.0);
-            assert_eq!(poly.eval_double(f64::from(t)), 3.0);
+            assert_eq!(poly.eval_f64(f64::from(t)), 3.0);
         }
-        assert_eq!(Poly::zero().coeffs(), [0.0]);
-        assert_eq!(Poly4D::zero().eval(5.0), Vector3WithYaw::default());
+        assert_eq!(Poly::ZERO.coeffs(), [0.0]);
+        assert_eq!(Poly::ZERO, Poly::constant(0.0));
+        assert_eq!(Poly4D::ZERO.eval(5.0), Vector3WithYaw::default());
     }
 
     #[test]
@@ -705,7 +708,7 @@ mod tests {
             (6.0, 22.0),
         ] {
             assert_eq!(poly.eval(t), expected);
-            assert_eq!(poly.eval_double(f64::from(t)), f64::from(expected));
+            assert_eq!(poly.eval_f64(f64::from(t)), f64::from(expected));
         }
     }
 
@@ -767,7 +770,7 @@ mod tests {
             (4.0, 0.0),
         ] {
             assert_eq!(poly.eval(t), expected);
-            assert_eq!(poly.eval_double(f64::from(t)), f64::from(expected));
+            assert_eq!(poly.eval_f64(f64::from(t)), f64::from(expected));
         }
     }
 

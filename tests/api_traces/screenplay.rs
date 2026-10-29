@@ -57,7 +57,8 @@ pub fn replay_queries(golden: &Value) -> Replay {
                         .unwrap_or(u32::MAX)
                 })
                 .collect();
-            let time_sec: Vec<f32> = WARPED_TIMES_SEC
+            // The oracle records the infinity of the C library as null
+            let time_sec: Vec<Option<f32>> = WARPED_TIMES_SEC
                 .iter()
                 .map(|&t| screenplay.time_sec_for_scene_tag_and_warped_time_in_scene(tag, t))
                 .collect();

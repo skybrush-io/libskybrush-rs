@@ -47,7 +47,7 @@ fn modifying_the_screenplay_does_not_fire_events_again() {
 
     assert_eq!(fired_events(&mut ctrl, 10_200), 0);
     assert!(ctrl.is_output_valid());
-    let output_time = ctrl.current_output_time();
+    let output_time = ctrl.current_output_time().expect("a valid output");
     assert!((output_time.warped_time_in_scene_sec - 10.1).abs() < 1e-3);
 }
 
@@ -105,7 +105,10 @@ fn replacing_the_screenplay_with_one_sharing_the_scene_keeps_the_players() {
     assert!(!ctrl.is_output_valid());
 
     assert_eq!(fired_events(&mut ctrl, 11_000), 0);
-    let warped = ctrl.current_output_time().warped_time_in_scene_sec;
+    let warped = ctrl
+        .current_output_time()
+        .expect("a valid output")
+        .warped_time_in_scene_sec;
     assert!((warped - 10.5).abs() < 1e-3);
 }
 
@@ -120,7 +123,12 @@ fn updates_beyond_i32_max_do_not_spoil_the_cache() {
     let beyond = u32::try_from(i32::MAX).unwrap() + 1;
     ctrl.update_time_msec(beyond);
     assert!(ctrl.has_reached_end());
-    assert_eq!(ctrl.current_output_time().time_msec, beyond);
+    assert_eq!(
+        ctrl.current_output_time()
+            .expect("a valid output")
+            .time_msec,
+        beyond
+    );
 
     // Back to the earlier time, the output is computed again
     ctrl.update_time_msec(5000);

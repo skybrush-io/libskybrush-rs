@@ -4,7 +4,7 @@
 use core::{error, fmt};
 
 use crate::formats::binary::{BinaryBlockType, BinaryFile, BinaryFileError};
-use crate::formats::tlv::TlvParser;
+use crate::formats::tlv::TlvEntries;
 
 /// The length of the unique ID of a show, in bytes.
 pub const SHOW_ID_LENGTH: usize = 4;
@@ -16,7 +16,7 @@ mod tags {
 }
 
 /// Why the metadata of a show could not be read.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum ShowMetadataError {
     /// The body of the show metadata block is not a valid tag-length-value
@@ -78,7 +78,7 @@ impl ShowMetadata {
     /// the drone index is not two bytes long.
     pub fn from_buffer(body: &[u8]) -> Result<Self, ShowMetadataError> {
         let mut result = Self::new();
-        for entry in TlvParser::new(body) {
+        for entry in TlvEntries::new(body) {
             let entry = entry.map_err(|_| ShowMetadataError::Corrupted)?;
             match entry.tag {
                 tags::SHOW_ID => {

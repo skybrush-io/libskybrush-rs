@@ -23,7 +23,7 @@ use crate::trajectory::TrajectoryError;
 use crate::yaw_control::YawControlError;
 
 /// Why a screenplay could not be read or modified.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum ScreenplayError {
     /// The show file has no trajectory.
@@ -119,7 +119,40 @@ impl From<TryReserveError> for ScreenplayError {
 }
 
 /// The scenes of a show and its return-to-home plan.
-#[derive(Clone, Debug, Default)]
+///
+/// Each scene is placed on the show clock by its origin, independently of
+/// the others; the first scene that contains a time instant is the active
+/// one. There may be gaps between the scenes.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::screenplay::Screenplay;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // A 10 s scene, then a gap of 5 s, then a scene that never ends
+/// let mut screenplay = Screenplay::new();
+/// let intro = screenplay.append_new_scene()?;
+/// intro.set_duration_msec(10_000);
+/// intro.set_tag(1);
+/// let main = screenplay.append_new_scene()?;
+/// main.set_origin_msec(15_000)?;
+/// main.set_tag(2);
+///
+/// assert_eq!(screenplay.scene_at_time_msec(5000).map(|(index, _)| index), Some(0));
+/// assert!(screenplay.scene_at_time_msec(12_000).is_none());
+/// let (index, scene) = screenplay.scene_at_time_msec(60_000).ok_or("no scene")?;
+/// assert_eq!((index, scene.tag()), (1, 2));
+///
+/// // When the main scene reaches 5 s of its own time
+/// assert_eq!(
+///     screenplay.time_msec_for_scene_tag_and_warped_time_in_scene(2, 5.0),
+///     Some(20_000)
+/// );
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Screenplay<'a> {
     scenes: Vec<ScreenplayScene<'a>>,
     rth_plan: Option<Rc<RthPlan<'a>>>,
@@ -254,7 +287,7 @@ impl<'a> Screenplay<'a> {
     }
 
     /// The time of the show clock, in seconds, when the first scene with the
-    /// given tag reaches the given warped time, or infinity if it never does;
+    /// given tag reaches the given warped time, or `None` if it never does;
     /// see [`time_msec_for_scene_tag_and_warped_time_in_scene`](Self::time_msec_for_scene_tag_and_warped_time_in_scene).
     #[must_use]
     #[expect(
@@ -265,9 +298,9 @@ impl<'a> Screenplay<'a> {
         &self,
         tag: u8,
         warped_time_sec: f32,
-    ) -> f32 {
+    ) -> Option<f32> {
         self.time_msec_for_scene_tag_and_warped_time_in_scene(tag, warped_time_sec)
-            .map_or(f32::INFINITY, |time_msec| time_msec as f32 / 1000.0)
+            .map(|time_msec| time_msec as f32 / 1000.0)
     }
 
     /// Removes every scene and the RTH plan.

@@ -10,23 +10,7 @@ use crate::colors::RgbColor;
 const COLOR_LENGTH: usize = 3;
 
 /// Why a color palette could not be created.
-///
-/// # Examples
-///
-/// ```
-/// use skybrush::colors::RgbColor;
-/// use skybrush::palette::ColorPalette;
-///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// let palette = ColorPalette::from_buffer(&[255, 0, 0, 0, 255, 0])?;
-/// assert_eq!(palette.len(), 2);
-/// assert_eq!(palette.color(1), Some(RgbColor::new(0, 255, 0)));
-/// assert_eq!(palette.color(2), None);
-/// assert_eq!(palette.color_or_default(2), RgbColor::BLACK);
-/// # Ok(())
-/// # }
-/// ```
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum ColorPaletteError {
     /// The number of bytes is not a multiple of three.
@@ -46,6 +30,22 @@ impl fmt::Display for ColorPaletteError {
 impl error::Error for ColorPaletteError {}
 
 /// A list of colors, stored as packed red, green and blue bytes.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::colors::RgbColor;
+/// use skybrush::palette::ColorPalette;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let palette = ColorPalette::from_buffer(&[255, 0, 0, 0, 255, 0])?;
+/// assert_eq!(palette.len(), 2);
+/// assert_eq!(palette.color(1), Some(RgbColor::new(0, 255, 0)));
+/// assert_eq!(palette.color(2), None);
+/// assert_eq!(palette.color_or_default(2), RgbColor::BLACK);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ColorPalette<'a> {
     bytes: Cow<'a, [u8]>,
@@ -66,7 +66,7 @@ impl ColorPalette<'static> {
     ///
     /// Returns [`ColorPaletteError::InvalidLength`] if the number of bytes is
     /// not a multiple of three.
-    pub fn from_bytes(bytes: Vec<u8>) -> Result<Self, ColorPaletteError> {
+    pub fn from_vec(bytes: Vec<u8>) -> Result<Self, ColorPaletteError> {
         Self::from_cow(Cow::Owned(bytes))
     }
 }

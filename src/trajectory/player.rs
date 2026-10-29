@@ -29,7 +29,7 @@ use crate::basic_types::Vector3WithYaw;
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TrajectoryPlayerState {
     /// Offset of the current segment in the bytes of the trajectory.
     start: usize,

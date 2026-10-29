@@ -58,7 +58,7 @@ fn scenario(golden: &Value) -> Value {
         program
     } else {
         let hex = golden["bytecode_hex"].as_str().expect("bytecode");
-        LightProgram::from_bytes(decode_hex(hex))
+        LightProgram::from_vec(decode_hex(hex))
     };
     actual.extend(playback(&program));
     Value::Object(actual)

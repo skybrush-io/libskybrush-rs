@@ -35,37 +35,6 @@ const POINT_LENGTH: usize = 4;
 const MAX_DURATION_SEC: u32 = 16_777_216;
 
 /// The parameters of an RTH plan entry that are set.
-///
-/// # Examples
-///
-/// ```
-/// use skybrush::basic_types::Vector3;
-/// use skybrush::rth_plan::{RthPlan, RthPlanEntryFlags};
-/// use skybrush::trajectory::Trajectory;
-///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// // The body of an RTH plan block: two landing points, and two entries
-/// let body = [
-///     0x00, 0x0a, 0xd0, 0x07, 0xe8, 0x03, 0x00, 0x00, 0x02, 0x00, 0x2c, 0x01, 0x90, 0x01,
-///     0x70, 0xfe, 0xd4, 0xfe, 0x02, 0x00, 0x20, 0x00, 0x00, 0x22, 0x0f, 0x00, 0x32, 0x05,
-/// ];
-/// let plan = RthPlan::from_buffer(&body)?;
-///
-/// // If the show is interrupted at 10 s: wait until 15 s, then fly to
-/// // (3 m, 4 m) in 50 s
-/// let entry = plan.evaluate_at(10.0)?;
-/// assert_eq!(entry.time_sec, 15.0);
-/// assert!(entry.flags.contains(RthPlanEntryFlags::HAS_TARGET_XY));
-/// assert_eq!((entry.landing_target.x, entry.landing_target.y), (3000.0, 4000.0));
-///
-/// // The trajectory of the action, from the position of the drone
-/// let start = Vector3 { x: 0.0, y: 0.0, z: 5000.0 };
-/// let trajectory = Trajectory::from_rth_plan_entry(&entry, start)?;
-/// let end = trajectory.end_position();
-/// assert!((end.x - 3000.0).abs() < 1.0 && (end.y - 4000.0).abs() < 1.0);
-/// # Ok(())
-/// # }
-/// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct RthPlanEntryFlags(u8);
 
@@ -127,11 +96,10 @@ pub struct RthPlanEntry {
 }
 
 impl RthPlanEntry {
-    /// An entry at the given time that lands in place, with the defaults of
-    /// the given plan, or without limits and at zero altitude if there is no
-    /// plan.
+    /// An entry at the given time that lands in place, without limits and
+    /// at zero altitude.
     #[must_use]
-    pub fn new(plan: Option<&RthPlan<'_>>, time_sec: f32) -> Self {
+    pub fn land_in_place(time_sec: f32) -> Self {
         Self {
             time_sec,
             duration_sec: 0.0,
@@ -146,15 +114,27 @@ impl RthPlanEntry {
             post_delay_sec: 0.0,
             pre_neck: 0.0,
             pre_neck_duration_sec: 0.0,
-            max_acceleration: plan.map_or(f32::INFINITY, RthPlan::default_acceleration_limit),
-            landing_velocity: plan.map_or(f32::NAN, RthPlan::default_landing_velocity),
-            landing_altitude: plan.map_or(0.0, RthPlan::default_landing_altitude),
+            max_acceleration: f32::INFINITY,
+            landing_velocity: f32::NAN,
+            landing_altitude: 0.0,
+        }
+    }
+
+    /// An entry at the given time that lands in place, with the defaults of
+    /// the given plan.
+    #[must_use]
+    pub fn land_in_place_with_defaults(plan: &RthPlan<'_>, time_sec: f32) -> Self {
+        Self {
+            max_acceleration: plan.default_acceleration_limit(),
+            landing_velocity: plan.default_landing_velocity().unwrap_or(f32::NAN),
+            landing_altitude: plan.default_landing_altitude(),
+            ..Self::land_in_place(time_sec)
         }
     }
 }
 
 /// Why an RTH plan could not be read or evaluated.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum RthPlanError {
     /// The body of the RTH plan block is malformed: its header, its points
@@ -203,7 +183,38 @@ impl From<BinaryFileError> for RthPlanError {
 
 /// A collective return-to-home plan: a list of points, and a list of entries
 /// that tell what to do from each time instant on.
-#[derive(Clone, Debug)]
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::basic_types::Vector3;
+/// use skybrush::rth_plan::{RthPlan, RthPlanEntryFlags};
+/// use skybrush::trajectory::Trajectory;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // The body of an RTH plan block: two landing points, and two entries
+/// let body = [
+///     0x00, 0x0a, 0xd0, 0x07, 0xe8, 0x03, 0x00, 0x00, 0x02, 0x00, 0x2c, 0x01, 0x90, 0x01,
+///     0x70, 0xfe, 0xd4, 0xfe, 0x02, 0x00, 0x20, 0x00, 0x00, 0x22, 0x0f, 0x00, 0x32, 0x05,
+/// ];
+/// let plan = RthPlan::from_buffer(&body)?;
+///
+/// // If the show is interrupted at 10 s: wait until 15 s, then fly to
+/// // (3 m, 4 m) in 50 s
+/// let entry = plan.evaluate_at(10.0)?;
+/// assert_eq!(entry.time_sec, 15.0);
+/// assert!(entry.flags.contains(RthPlanEntryFlags::HAS_TARGET_XY));
+/// assert_eq!((entry.landing_target.x, entry.landing_target.y), (3000.0, 4000.0));
+///
+/// // The trajectory of the action, from the position of the drone
+/// let start = Vector3 { x: 0.0, y: 0.0, z: 5000.0 };
+/// let trajectory = Trajectory::from_rth_plan_entry(&entry, start)?;
+/// let end = trajectory.end_position();
+/// assert!((end.x - 3000.0).abs() < 1.0 && (end.y - 4000.0).abs() < 1.0);
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Clone, Debug, PartialEq)]
 pub struct RthPlan<'a> {
     /// The header, the points and the entries, as in the body of an RTH plan
     /// block.
@@ -214,7 +225,7 @@ pub struct RthPlan<'a> {
     header_length: usize,
     num_points: usize,
     max_acceleration: f32,
-    landing_velocity: f32,
+    landing_velocity: Option<f32>,
     landing_altitude: f32,
 }
 
@@ -234,7 +245,7 @@ impl RthPlan<'static> {
             header_length: 0,
             num_points: 0,
             max_acceleration: f32::INFINITY,
-            landing_velocity: f32::NAN,
+            landing_velocity: None,
             landing_altitude: 0.0,
         }
     }
@@ -244,7 +255,7 @@ impl RthPlan<'static> {
     /// # Errors
     ///
     /// Returns [`RthPlanError::Corrupted`] if the body is malformed.
-    pub fn from_bytes(bytes: Vec<u8>) -> Result<Self, RthPlanError> {
+    pub fn from_vec(bytes: Vec<u8>) -> Result<Self, RthPlanError> {
         Self::from_cow(Cow::Owned(bytes))
     }
 }
@@ -282,7 +293,11 @@ impl<'a> RthPlan<'a> {
             0 => f32::INFINITY,
             value => f32::from(value),
         };
-        let landing_velocity = f32::from(u16_at(4));
+        // Zero means no descent
+        let landing_velocity = match u16_at(4) {
+            0 => None,
+            value => Some(f32::from(value)),
+        };
         let landing_altitude = f32::from(read_i16(&bytes, 6).unwrap_or_default()) * scale;
         let num_points = usize::from(u16_at(8));
         Ok(Self {
@@ -319,21 +334,11 @@ impl<'a> RthPlan<'a> {
         self.landing_altitude
     }
 
-    /// The velocity of the descent to the landing altitude, or NaN if the
+    /// The velocity of the descent to the landing altitude, or `None` if the
     /// actions do not descend.
     #[must_use]
-    pub fn default_landing_velocity(&self) -> f32 {
-        if self.has_default_landing_velocity() {
-            self.landing_velocity
-        } else {
-            f32::NAN
-        }
-    }
-
-    /// Whether the actions descend to the landing altitude.
-    #[must_use]
-    pub fn has_default_landing_velocity(&self) -> bool {
-        self.landing_velocity.is_finite() && self.landing_velocity > 0.0
+    pub fn default_landing_velocity(&self) -> Option<f32> {
+        self.landing_velocity
     }
 
     /// Sets the largest acceleration during the actions; zero, negative
@@ -358,11 +363,8 @@ impl<'a> RthPlan<'a> {
     /// Sets the velocity of the descent to the landing altitude; zero,
     /// negative values, infinity and NaN mean no descent.
     pub fn set_default_landing_velocity(&mut self, landing_velocity: f32) {
-        self.landing_velocity = if landing_velocity.is_finite() && landing_velocity > 0.0 {
-            landing_velocity
-        } else {
-            f32::NAN
-        };
+        self.landing_velocity =
+            (landing_velocity.is_finite() && landing_velocity > 0.0).then_some(landing_velocity);
     }
 
     /// Makes the actions not descend to the landing altitude.
@@ -374,6 +376,11 @@ impl<'a> RthPlan<'a> {
     #[must_use]
     pub const fn num_points(&self) -> usize {
         self.num_points
+    }
+
+    /// An iterator over the points, in millimeters.
+    pub fn points(&self) -> impl Iterator<Item = Vector2> + '_ {
+        (0..self.num_points).map_while(|index| self.point(index))
     }
 
     /// The point at the given index, in millimeters, or `None` if there is
@@ -418,7 +425,7 @@ impl<'a> RthPlan<'a> {
         reason = "entry times are compared and returned as floats, as in the C library"
     )]
     pub fn evaluate_at(&self, time_sec: f32) -> Result<RthPlanEntry, RthPlanError> {
-        let default = RthPlanEntry::new(Some(self), time_sec);
+        let default = RthPlanEntry::land_in_place_with_defaults(self, time_sec);
         if time_sec < 0.0 {
             return Ok(default);
         }
@@ -477,7 +484,7 @@ impl Reader<'_, '_> {
     /// Decodes the parameters of an entry with the given flags, starting
     /// from the defaults of the plan.
     fn entry(&mut self, flags: u8, time_sec: f32) -> Result<RthPlanEntry, RthPlanError> {
-        let mut entry = RthPlanEntry::new(Some(self.plan), time_sec);
+        let mut entry = RthPlanEntry::land_in_place_with_defaults(self.plan, time_sec);
         let flags = RthPlanEntryFlags::from_bits_retain(flags);
         if flags.contains(RthPlanEntryFlags::HAS_NECK) {
             entry.pre_neck = self.coordinate()?;
@@ -629,7 +636,7 @@ mod tests {
     }
 
     fn evaluate(second_entry: &[u8], time_sec: f32) -> Result<f32, RthPlanError> {
-        let plan = RthPlan::from_bytes(plan_with_undecodable_second_entry(second_entry))
+        let plan = RthPlan::from_vec(plan_with_undecodable_second_entry(second_entry))
             .map_err(|_| RthPlanError::Corrupted)?;
         plan.evaluate_at(time_sec).map(|entry| entry.time_sec)
     }
@@ -663,7 +670,7 @@ mod tests {
     fn truncated_entries_make_the_plan_invalid() {
         let body = plan_with_undecodable_second_entry(&[0x02, 0x0a]);
         assert!(matches!(
-            RthPlan::from_bytes(body),
+            RthPlan::from_vec(body),
             Err(RthPlanError::Corrupted)
         ));
     }

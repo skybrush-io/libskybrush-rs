@@ -22,7 +22,7 @@ use crate::poly::bezier_cut_at;
 const MAX_LANDING_DURATION_SEC: f32 = 60.0;
 
 /// Why the end of a trajectory could not be replaced with a landing.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum LandingError {
     /// The statistics do not contain the landing time.
@@ -106,7 +106,8 @@ impl Trajectory<'_> {
     }
 
     /// Replaces the end of the trajectory with a smooth landing at the given
-    /// position, arriving there at rest. See
+    /// position, arriving there at rest, and returns the updated statistics.
+    /// See
     /// [`replace_end_to_land_at_with_terminal_velocity`](Self::replace_end_to_land_at_with_terminal_velocity).
     ///
     /// # Errors
@@ -114,10 +115,10 @@ impl Trajectory<'_> {
     /// As for `replace_end_to_land_at_with_terminal_velocity`.
     pub fn replace_end_to_land_at(
         &mut self,
-        stats: &mut TrajectoryStats,
+        stats: &TrajectoryStats,
         new_landing_position: Vector3,
         new_landing_velocity: f32,
-    ) -> Result<(), LandingError> {
+    ) -> Result<TrajectoryStats, LandingError> {
         self.replace_end_to_land_at_with_terminal_velocity(
             stats,
             new_landing_position,
@@ -128,7 +129,8 @@ impl Trajectory<'_> {
 
     /// Replaces the end of the trajectory after the landing time in the
     /// statistics with a cubic Bézier curve to the given position, and
-    /// updates the statistics.
+    /// returns the statistics of the new trajectory: the given statistics,
+    /// with the components that were calculated updated.
     ///
     /// The duration of the landing segment is the vertical distance divided
     /// by `new_landing_velocity`, at most 60 seconds. The drone arrives at
@@ -141,14 +143,14 @@ impl Trajectory<'_> {
     /// Returns an error if the statistics have no landing time, a velocity is
     /// invalid, the landing position is not below the position at the landing
     /// time, a coordinate is out of range, or memory could not be allocated.
-    /// Neither the trajectory nor the statistics are modified then.
+    /// The trajectory is left intact then.
     pub fn replace_end_to_land_at_with_terminal_velocity(
         &mut self,
-        stats: &mut TrajectoryStats,
+        stats: &TrajectoryStats,
         new_landing_position: Vector3,
         new_landing_velocity: f32,
         terminal_velocity: f32,
-    ) -> Result<(), LandingError> {
+    ) -> Result<TrajectoryStats, LandingError> {
         let landing = stats.landing.ok_or(LandingError::MissingLandingTime)?;
         if terminal_velocity < 0.0 || new_landing_velocity <= 0.0 {
             return Err(LandingError::InvalidVelocity);
@@ -195,6 +197,7 @@ impl Trajectory<'_> {
         let cut = self.plan_cut(landing.landing_time_sec)?;
         self.rewrite(&cut, segment.as_bytes())?;
 
+        let mut stats = *stats;
         if let Some(msec) = &mut stats.duration_msec {
             *msec = float_to_msec(landing.landing_time_sec * 1000.0).saturating_add(duration_msec);
         }
@@ -210,7 +213,7 @@ impl Trajectory<'_> {
                 new_landing_position.y - start.y,
             );
         }
-        Ok(())
+        Ok(stats)
     }
 
     /// Decides how to cut the trajectory at the given time, in seconds.
@@ -364,10 +367,10 @@ mod tests {
     #[test]
     fn a_failed_landing_changes_nothing() {
         let mut trajectory = up_and_sideways();
-        let mut stats = TrajectoryStatsCalculator::new(1000.0)
+        let stats = TrajectoryStatsCalculator::new(1000.0)
             .run(&trajectory)
             .unwrap();
-        let (bytes, original_stats) = (trajectory.bytes().to_vec(), stats);
+        let bytes = trajectory.bytes().to_vec();
         // The landing position is below the trajectory but out of the range
         // of the scale
         let target = Vector3 {
@@ -376,21 +379,20 @@ mod tests {
             z: 0.0,
         };
         assert_eq!(
-            trajectory.replace_end_to_land_at(&mut stats, target, 500.0),
+            trajectory.replace_end_to_land_at(&stats, target, 500.0),
             Err(LandingError::Builder(
                 TrajectoryBuilderError::CoordinateOutOfRange
             ))
         );
         assert_eq!(trajectory.bytes(), bytes);
-        assert_eq!(stats, original_stats);
     }
 
     #[test]
     fn landing_needs_the_landing_time() {
         let mut trajectory = up_and_sideways();
-        let mut stats = TrajectoryStats::default();
+        let stats = TrajectoryStats::default();
         assert_eq!(
-            trajectory.replace_end_to_land_at(&mut stats, Vector3::default(), 500.0),
+            trajectory.replace_end_to_land_at(&stats, Vector3::default(), 500.0),
             Err(LandingError::MissingLandingTime)
         );
     }
