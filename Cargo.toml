@@ -6,7 +6,18 @@ rust-version = "1.98.1"
 description = "Parsing and playback of Skybrush drone show files"
 license = "GPL-3.0-or-later"
 authors = ["CollMot Robotics Ltd."]
-publish = false
+repository = "https://github.com/skybrush-io/libskybrush-rs"
+homepage = "https://skybrush.io"
+readme = "README.md"
+keywords = ["drone", "drone-show", "skybrush", "no-std", "embedded"]
+categories = ["aerospace::drones", "embedded", "no-std", "parser-implementations"]
+# The test oracle and the fuzz targets are not needed to build the crate
+include = ["/src", "/README.md", "/CHANGELOG.md", "/COPYING"]
+
+[package.metadata.docs.rs]
+# The crate is meant for firmware; the documentation is the same on every
+# target, but this one shows that it builds without std
+targets = ["x86_64-unknown-linux-gnu", "thumbv7em-none-eabihf"]
 
 [dependencies]
 libm = "0.2.16"
