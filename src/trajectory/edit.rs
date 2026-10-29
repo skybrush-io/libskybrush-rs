@@ -169,12 +169,7 @@ impl Trajectory<'_> {
         }
 
         // The landing segment, with the yaw of the landing time
-        let new_end = Vector3WithYaw {
-            x: new_landing_position.x,
-            y: new_landing_position.y,
-            z: new_landing_position.z,
-            yaw: landing.pos_at_landing_time.yaw,
-        };
+        let new_end = new_landing_position.with_yaw(landing.pos_at_landing_time.yaw);
         let end_velocity = Vector3WithYaw {
             z: -terminal_velocity,
             ..Vector3WithYaw::default()

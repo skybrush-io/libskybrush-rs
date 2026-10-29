@@ -305,16 +305,8 @@ impl TrajectoryBuilder {
             // Split the line in halves; both are shorter than the line and
             // not empty, so the recursion ends
             let last = self.last_position;
-            #[expect(
-                clippy::manual_midpoint,
-                reason = "as in C, which overflows where f32::midpoint would not"
-            )]
-            let midpoint = Vector3WithYaw {
-                x: (last.x + target.x) / 2.0,
-                y: (last.y + target.y) / 2.0,
-                z: (last.z + target.z) / 2.0,
-                yaw: (last.yaw + target.yaw) / 2.0,
-            };
+            // As in C, which overflows where f32::midpoint would not
+            let midpoint = (last + target) / 2.0;
             let half = duration_msec / 2;
             self.append_line_unchecked(midpoint, half)?;
             return self.append_line_unchecked(target, duration_msec - half);
@@ -367,27 +359,15 @@ impl TrajectoryBuilder {
             yaw: (target.yaw - start.yaw) / duration_sec,
             ..Vector3WithYaw::default()
         };
-        let travel_velocity = Vector3WithYaw {
-            x: travel_speed * (target.x - start.x) / distance,
-            y: travel_speed * (target.y - start.y) / distance,
-            z: travel_speed * (target.z - start.z) / distance,
-            yaw: rest.yaw,
-        };
-        // How far the drone gets while accelerating or decelerating
-        let offset = Vector3WithYaw {
-            x: travel_velocity.x * accel_sec / 2.0,
-            y: travel_velocity.y * accel_sec / 2.0,
-            z: travel_velocity.z * accel_sec / 2.0,
-            yaw: travel_velocity.yaw * accel_sec,
-        };
+        let travel_velocity =
+            (travel_speed * (target.xyz() - start.xyz()) / distance).with_yaw(rest.yaw);
+        // How far the drone gets while accelerating or decelerating; the yaw
+        // changes uniformly, so its offset is twice as large
+        let offset =
+            (travel_velocity.xyz() * accel_sec / 2.0).with_yaw(travel_velocity.yaw * accel_sec);
 
         // Accelerate from rest to the travel velocity
-        let cruise_start = Vector3WithYaw {
-            x: start.x + offset.x,
-            y: start.y + offset.y,
-            z: start.z + offset.z,
-            yaw: start.yaw + offset.yaw,
-        };
+        let cruise_start = start + offset;
         self.append_smooth_curve(
             (start, rest),
             (cruise_start, travel_velocity),
@@ -396,12 +376,7 @@ impl TrajectoryBuilder {
         )?;
 
         // Move with the travel velocity, if there is time left for it
-        let cruise_end = Vector3WithYaw {
-            x: target.x - offset.x,
-            y: target.y - offset.y,
-            z: target.z - offset.z,
-            yaw: target.yaw - offset.yaw,
-        };
+        let cruise_end = target - offset;
         if let Some(cruise_msec) = duration_msec.checked_sub(accel_msec.saturating_mul(2))
             && cruise_msec > 0
         {

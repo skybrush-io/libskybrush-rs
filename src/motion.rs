@@ -84,17 +84,5 @@ pub fn cubic_bezier_from_velocity_constraints(
     }
 
     let scale = duration_sec / 3.0;
-    let control1 = Vector3WithYaw {
-        x: start.x + scale * start_vel.x,
-        y: start.y + scale * start_vel.y,
-        z: start.z + scale * start_vel.z,
-        yaw: start.yaw + scale * start_vel.yaw,
-    };
-    let control2 = Vector3WithYaw {
-        x: end.x - scale * end_vel.x,
-        y: end.y - scale * end_vel.y,
-        z: end.z - scale * end_vel.z,
-        yaw: end.yaw - scale * end_vel.yaw,
-    };
-    Some((control1, control2))
+    Some((start + scale * start_vel, end - scale * end_vel))
 }

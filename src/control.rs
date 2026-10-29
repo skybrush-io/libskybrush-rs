@@ -460,12 +460,7 @@ impl<'a> ShowController<'a> {
         output.clear();
         if let Some(player) = &mut self.players.trajectory {
             output.set_position(player.position_at(warped_time_sec).xyz());
-            output.set_velocity(
-                player
-                    .velocity_at(warped_time_sec)
-                    .xyz()
-                    .scaled(warped_rate),
-            );
+            output.set_velocity(player.velocity_at(warped_time_sec).xyz() * warped_rate);
         }
         if let Some(player) = &mut self.players.light {
             let light_time_sec = if warped_time_sec < 0.0 || !warped_time_sec.is_finite() {
