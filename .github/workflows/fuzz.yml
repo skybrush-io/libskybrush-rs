@@ -1,0 +1,91 @@
+name: Fuzz
+
+# Runs only when started by hand, from the Actions tab or with
+# `gh workflow run fuzz.yml -f seconds=3600`
+on:
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: How long to run each fuzz target, in seconds
+        required: true
+        default: "600"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build the fuzz targets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: rustup toolchain install nightly --profile minimal
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - run: cargo install cargo-fuzz --locked
+      # Compiles the crate once, in release mode with the sanitizer and debug
+      # assertions, and links every fuzz target against it
+      - run: cargo +nightly fuzz build
+      # Only the executables of the fuzz targets, without the build directory
+      - run: |
+          mkdir fuzz-targets
+          cargo +nightly fuzz list | while read -r target; do
+            cp "fuzz/target/x86_64-unknown-linux-gnu/release/$target" fuzz-targets/
+          done
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-targets
+          path: fuzz-targets/
+          retention-days: 1
+          if-no-files-found: error
+
+  fuzz:
+    name: Fuzz ${{ matrix.target }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - show_file
+          - trajectory
+          - light_program
+          - yaw_control
+          - event_list
+          - rth_plan
+          - tlv
+    env:
+      TARGET: ${{ matrix.target }}
+      SECONDS_PER_TARGET: ${{ inputs.seconds }}
+    steps:
+      # For the seeds of the corpus, which come from the test oracle
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: fuzz-targets
+          path: fuzz-targets
+      - run: python3 -I fuzz/seed.py
+      - name: Run the fuzz target
+        run: |
+          case "$SECONDS_PER_TARGET" in
+            ''|*[!0-9]*) echo "seconds must be a whole number" >&2; exit 2 ;;
+          esac
+          chmod +x "fuzz-targets/$TARGET"
+          mkdir -p "fuzz/artifacts/$TARGET"
+          "fuzz-targets/$TARGET" "fuzz/corpus/$TARGET" \
+            -max_total_time="$SECONDS_PER_TARGET" -timeout=10 -rss_limit_mb=2048 \
+            -artifact_prefix="fuzz/artifacts/$TARGET/" -print_final_stats=1
+      - name: Upload the input that failed
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: failure-${{ matrix.target }}
+          path: fuzz/artifacts/${{ matrix.target }}
+      - name: Upload the corpus
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: corpus-${{ matrix.target }}
+          path: fuzz/corpus/${{ matrix.target }}
+          retention-days: 7

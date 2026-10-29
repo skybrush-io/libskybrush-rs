@@ -27,3 +27,15 @@ blocks, so that mutations of the blocks are not rejected for a wrong checksum.
 Light programs are executed one command at a time, so the targets seek at
 most ten minutes into them; a program of short waits takes long to seek far
 ahead, as in the C library.
+
+## On GitHub Actions
+
+The `Fuzz` workflow (`.github/workflows/fuzz.yml`) runs only when started by
+hand, from the Actions tab or with
+
+    gh workflow run fuzz.yml -f seconds=3600
+
+It builds the fuzz targets once, with the crate compiled a single time, and
+then runs each target in its own job for the given number of seconds. The
+input that made a target fail and the grown corpus are uploaded as
+artifacts.
