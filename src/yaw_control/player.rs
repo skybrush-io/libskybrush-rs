@@ -42,6 +42,24 @@ pub struct YawSetpoint {
 /// After the last delta, the player has a final setpoint that keeps the last
 /// yaw forever. The player holds the yaw control object through any pointer
 /// to it, e.g. a reference or an `Rc`.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::yaw_control::{YawControl, YawPlayer};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // A yaw of 90 degrees, then a turn by 45 degrees in 1 s; yaws are given in
+/// // tenths of degrees
+/// let ctrl = YawControl::from_buffer(&[0x00, 0x84, 0x03, 0xe8, 0x03, 0xc2, 0x01])?;
+/// let mut player = YawPlayer::new(&ctrl);
+/// assert_eq!(player.yaw_at(0.0), 90.0);
+/// assert_eq!(player.yaw_at(0.5), 112.5);
+/// assert_eq!(player.yaw_rate_at(0.5), 45.0);
+/// assert_eq!(player.yaw_at(10.0), 135.0);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Debug)]
 pub struct YawPlayer<T> {
     ctrl: T,

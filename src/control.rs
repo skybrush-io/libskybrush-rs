@@ -281,6 +281,42 @@ fn sync_player<P, C>(
 /// through [`screenplay_mut`](Self::screenplay_mut); the players of the
 /// current scene keep their state across modifications unless the scene or
 /// its components change.
+///
+/// # Examples
+///
+/// ```
+/// use std::rc::Rc;
+///
+/// use skybrush::control::ShowController;
+/// use skybrush::screenplay::Screenplay;
+/// use skybrush::time_axis::TimeSegment;
+/// # use skybrush::basic_types::Vector3WithYaw;
+/// # use skybrush::trajectory::TrajectoryBuilder;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # let mut builder = TrajectoryBuilder::new(1)?;
+/// # builder.set_start_position(Vector3WithYaw::default())?;
+/// # builder.append_line(Vector3WithYaw { x: 10_000.0, ..Vector3WithYaw::default() }, 10_000)?;
+/// # let trajectory = builder.build()?;
+/// // A screenplay with a single scene that plays a trajectory
+/// let mut screenplay = Screenplay::new();
+/// let scene = screenplay.append_new_scene()?;
+/// scene.set_trajectory(Some(Rc::new(trajectory)));
+/// let mut controller = ShowController::new(screenplay);
+/// controller.update_time_msec(1000);
+///
+/// // Pause the show 2 s in: real time until then, stopped time afterwards
+/// let scene = controller.screenplay_mut().scene_mut(0).ok_or("no scene")?;
+/// scene.time_axis_mut().append_segment(TimeSegment::realtime(2000))?;
+/// scene.time_axis_mut().append_segment(TimeSegment::constant_rate(u32::MAX, 0.0))?;
+///
+/// controller.update_time_msec(5000);
+/// let output_time = controller.current_output_time();
+/// assert_eq!(output_time.warped_time_in_scene_sec, 2.0);
+/// assert_eq!(controller.current_output().velocity().map(|v| v.x), Some(0.0));
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct ShowController<'a> {
     screenplay: Screenplay<'a>,

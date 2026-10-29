@@ -8,6 +8,27 @@ use super::segment::TrajectorySegment;
 use crate::basic_types::Vector3WithYaw;
 
 /// The state of a trajectory player: the segment it is at.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::basic_types::Vector3WithYaw;
+/// use skybrush::trajectory::{TrajectoryBuilder, TrajectoryPlayer};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # let mut builder = TrajectoryBuilder::new(1)?;
+/// # builder.set_start_position(Vector3WithYaw::default())?;
+/// # builder.append_line(Vector3WithYaw { x: 3000.0, ..Vector3WithYaw::default() }, 3000)?;
+/// // A trajectory along the X axis, 3 m in 3 s
+/// let trajectory = builder.build()?;
+/// let mut player = TrajectoryPlayer::new(&trajectory);
+/// let position = player.position_at(1.5);
+/// let velocity = player.velocity_at(1.5);
+/// assert!((position.x - 1500.0).abs() < 1e-3);
+/// assert!((velocity.x - 1000.0).abs() < 1e-3);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct TrajectoryPlayerState {
     /// Offset of the current segment in the bytes of the trajectory.

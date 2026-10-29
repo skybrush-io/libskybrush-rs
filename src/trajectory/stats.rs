@@ -152,6 +152,28 @@ impl error::Error for TrajectoryStatsError {}
 ///
 /// Distances, speeds and accelerations are in the units of the trajectory
 /// (millimeters for trajectories of show files).
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::basic_types::Vector3WithYaw;
+/// use skybrush::trajectory::{TrajectoryBuilder, TrajectoryStatsCalculator};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # let mut builder = TrajectoryBuilder::new(1)?;
+/// # builder.set_start_position(Vector3WithYaw::default())?;
+/// # builder.append_line(Vector3WithYaw { z: 5000.0, ..Vector3WithYaw::default() }, 5000)?;
+/// # builder.append_line(Vector3WithYaw::default(), 5000)?;
+/// // A trajectory that climbs to 5 m in 5 s and lands in 5 s
+/// let trajectory = builder.build()?;
+/// // Coordinates in millimeters
+/// let calculator = TrajectoryStatsCalculator::new(1000.0);
+/// let stats = calculator.run(&trajectory)?;
+/// assert_eq!(stats.duration_msec, Some(10_000));
+/// assert!(stats.takeoff.is_some() && stats.landing.is_some());
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TrajectoryStatsCalculator {
     /// The components to calculate.

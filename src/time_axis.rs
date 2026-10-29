@@ -14,6 +14,25 @@ use core::{error, fmt};
 use libm::{ceilf, fabsf, sqrtf};
 
 /// Why a time axis could not be modified.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::time_axis::{TimeAxis, TimeSegment};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // Real time for 10 s, then slowing down to a standstill in 2 s
+/// let mut axis = TimeAxis::new();
+/// axis.append_segment(TimeSegment::realtime(10_000))?;
+/// axis.append_segment(TimeSegment::slowdown_from_realtime(2000))?;
+/// axis.append_segment(TimeSegment::constant_rate(u32::MAX, 0.0))?;
+/// assert_eq!(axis.map(5000), 5.0);
+/// // The time stops at 11 s
+/// assert_eq!(axis.map(60_000), 11.0);
+/// assert_eq!(axis.reverse_map(5.0), 5000);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TimeAxisError {
     /// A rate of the segment is negative or NaN.

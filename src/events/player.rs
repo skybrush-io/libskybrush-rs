@@ -19,6 +19,36 @@ const MAX_TIME_SEC: f32 = (u32::MAX / 1000) as f32;
 ///
 /// The player holds the event list through any pointer to it, e.g. a
 /// reference or an `Rc`.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::events::{Event, EventList, EventListPlayer, EventType};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let pyro = |time_msec, channel| Event {
+///     time_msec,
+///     event_type: EventType::PYRO,
+///     subtype: channel,
+///     payload: [0; 4],
+/// };
+/// let mut events = EventList::new();
+/// events.insert(pyro(3000, 1))?;
+/// events.insert(pyro(1000, 2))?;
+/// // Turn every channel off 500 ms after it was fired
+/// events.add_pyro_off_events(500)?;
+/// assert_eq!(events.len(), 4);
+///
+/// // Fire the events up to 2 s
+/// let mut player = EventListPlayer::new(&events);
+/// let mut fired = Vec::new();
+/// while let Some(event) = player.next_event_not_later_than(2.0) {
+///     fired.push((event.time_msec, event.is_pyro_on()));
+/// }
+/// assert_eq!(fired, [(1000, true), (1500, false)]);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Debug)]
 pub struct EventListPlayer<T> {
     events: T,

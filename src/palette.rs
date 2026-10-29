@@ -10,6 +10,22 @@ use crate::colors::RgbColor;
 const COLOR_LENGTH: usize = 3;
 
 /// Why a color palette could not be created.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::colors::RgbColor;
+/// use skybrush::palette::ColorPalette;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let palette = ColorPalette::from_buffer(&[255, 0, 0, 0, 255, 0])?;
+/// assert_eq!(palette.len(), 2);
+/// assert_eq!(palette.color(1), Some(RgbColor::new(0, 255, 0)));
+/// assert_eq!(palette.color(2), None);
+/// assert_eq!(palette.color_or_default(2), RgbColor::BLACK);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ColorPaletteError {
     /// The number of bytes is not a multiple of three.

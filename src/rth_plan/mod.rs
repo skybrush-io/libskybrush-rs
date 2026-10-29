@@ -35,6 +35,37 @@ const POINT_LENGTH: usize = 4;
 const MAX_DURATION_SEC: u32 = 16_777_216;
 
 /// The parameters of an RTH plan entry that are set.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::basic_types::Vector3;
+/// use skybrush::rth_plan::{RthPlan, RthPlanEntryFlags};
+/// use skybrush::trajectory::Trajectory;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // The body of an RTH plan block: two landing points, and two entries
+/// let body = [
+///     0x00, 0x0a, 0xd0, 0x07, 0xe8, 0x03, 0x00, 0x00, 0x02, 0x00, 0x2c, 0x01, 0x90, 0x01,
+///     0x70, 0xfe, 0xd4, 0xfe, 0x02, 0x00, 0x20, 0x00, 0x00, 0x22, 0x0f, 0x00, 0x32, 0x05,
+/// ];
+/// let plan = RthPlan::from_buffer(&body)?;
+///
+/// // If the show is interrupted at 10 s: wait until 15 s, then fly to
+/// // (3 m, 4 m) in 50 s
+/// let entry = plan.evaluate_at(10.0)?;
+/// assert_eq!(entry.time_sec, 15.0);
+/// assert!(entry.flags.contains(RthPlanEntryFlags::HAS_TARGET_XY));
+/// assert_eq!((entry.landing_target.x, entry.landing_target.y), (3000.0, 4000.0));
+///
+/// // The trajectory of the action, from the position of the drone
+/// let start = Vector3 { x: 0.0, y: 0.0, z: 5000.0 };
+/// let trajectory = Trajectory::from_rth_plan_entry(&entry, start)?;
+/// let end = trajectory.end_position();
+/// assert!((end.x - 3000.0).abs() < 1.0 && (end.y - 4000.0).abs() < 1.0);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct RthPlanEntryFlags(u8);
 

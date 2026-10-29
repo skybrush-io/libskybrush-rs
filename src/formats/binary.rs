@@ -65,6 +65,24 @@ pub struct BinaryBlock<'a> {
 }
 
 /// Why a show file could not be read.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::formats::binary::{BinaryBlockType, BinaryFile};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // A show file of version 1 with a single comment block
+/// let bytes = b"skyb\x01\x03\x05\x00hello";
+/// let file = BinaryFile::new(bytes)?;
+/// for block in file.blocks() {
+///     let block = block?;
+///     assert_eq!(block.block_type, BinaryBlockType::COMMENT);
+///     assert_eq!(block.body, b"hello");
+/// }
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BinaryFileError {
     /// The file does not start with the signature `skyb`.

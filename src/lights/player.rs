@@ -27,6 +27,20 @@ const FRAME_MSEC: u64 = 20;
 ///
 /// The player holds the light program through any pointer to it, e.g. a
 /// reference or an `Rc`.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::colors::RgbColor;
+/// use skybrush::lights::{LightPlayer, LightProgram};
+///
+/// // Red for 1 s (50 frames of 20 ms), then a fade to blue in 1 s
+/// let program = LightProgram::from_buffer(&[0x04, 255, 0, 0, 50, 0x08, 0, 0, 255, 50, 0x00]);
+/// let mut player = LightPlayer::new(&program);
+/// assert_eq!(player.color_at(500), RgbColor::new(255, 0, 0));
+/// assert_eq!(player.color_at(5000), RgbColor::new(0, 0, 255));
+/// assert!(player.seek(5000), "the program has ended");
+/// ```
 #[derive(Clone, Debug)]
 pub struct LightPlayer<T> {
     program: T,

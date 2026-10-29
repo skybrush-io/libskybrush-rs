@@ -25,6 +25,26 @@ const LINEAR: u8 = 0x01;
 const BEZIER: u8 = 0x02;
 
 /// Why a trajectory could not be built or modified.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::basic_types::Vector3WithYaw;
+/// use skybrush::trajectory::TrajectoryBuilder;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // Coordinates are stored in units of 1 mm
+/// let mut builder = TrajectoryBuilder::new(1)?;
+/// builder.set_start_position(Vector3WithYaw::default())?;
+/// let target = Vector3WithYaw { x: 3000.0, z: 2000.0, ..Vector3WithYaw::default() };
+/// builder.append_line(target, 4000)?;
+/// builder.hold_position_for(1000)?;
+/// let trajectory = builder.build()?;
+/// assert_eq!(trajectory.total_duration_msec(), 5000);
+/// assert_eq!(trajectory.end_position(), target);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TrajectoryBuilderError {
     /// The scale is zero or larger than 127.

@@ -45,6 +45,21 @@ impl error::Error for TlvError {}
 ///
 /// If the stream ends in the middle of an entry, the iterator yields an
 /// error and then ends.
+///
+/// # Examples
+///
+/// ```
+/// use skybrush::formats::tlv::{TlvEntry, TlvParser};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // Tag 1 with two bytes, then tag 7 without a value
+/// let stream = [0x01, 0x02, 0x00, 0xaa, 0xbb, 0x07, 0x00, 0x00];
+/// let entries: Vec<TlvEntry<'_>> = TlvParser::new(&stream).collect::<Result<_, _>>()?;
+/// assert_eq!(entries[0], TlvEntry { tag: 1, value: &[0xaa, 0xbb] });
+/// assert_eq!(entries[1], TlvEntry { tag: 7, value: &[] });
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Debug)]
 pub struct TlvParser<'a> {
     /// The rest of the stream, starting at the header of the next entry.
