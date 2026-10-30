@@ -4,7 +4,7 @@ Parsing and playback of Skybrush drone show files in Rust.
 
 This is a rewrite of the C library
 [libskybrush](https://github.com/skybrush-io/libskybrush), with feature parity
-to version 6.0.2 of the C library where possible. The API is idiomatic Rust and
+to version 6.0.4 of the C library where possible. The API is idiomatic Rust and
 does not follow the conventions of the C library.
 
 The crate is `no_std` and requires a global allocator only, so it can be used

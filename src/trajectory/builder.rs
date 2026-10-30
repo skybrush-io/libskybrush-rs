@@ -223,15 +223,7 @@ impl TrajectoryBuilder {
     ///
     /// Returns an error if memory could not be allocated.
     pub fn hold_position_for(&mut self, duration_msec: u32) -> Result<(), TrajectoryBuilderError> {
-        self.all_or_nothing(|builder| {
-            let mut remaining = duration_msec;
-            while remaining > 0 {
-                let current = remaining.min(MAX_DURATION_MSEC);
-                remaining -= current;
-                builder.append_line_unchecked(builder.last_position, current)?;
-            }
-            Ok(())
-        })
+        self.all_or_nothing(|builder| builder.hold_position_for_unchecked(duration_msec))
     }
 
     /// Moves to the given target in the given time: accelerating smoothly to
@@ -241,6 +233,9 @@ impl TrajectoryBuilder {
     ///
     /// An acceleration that is not positive and finite means moving along a
     /// straight line with constant velocity.
+    ///
+    /// A move that does not change the position holds the position for the
+    /// given duration, like [`hold_position_for`](Self::hold_position_for).
     ///
     /// # Errors
     ///
@@ -316,6 +311,21 @@ impl TrajectoryBuilder {
         self.append(&segment, target)
     }
 
+    /// Holds the last position for a given time; the caller restores the
+    /// builder if this fails.
+    fn hold_position_for_unchecked(
+        &mut self,
+        duration_msec: u32,
+    ) -> Result<(), TrajectoryBuilderError> {
+        let mut remaining = duration_msec;
+        while remaining > 0 {
+            let current = remaining.min(MAX_DURATION_MSEC);
+            remaining -= current;
+            self.append_line_unchecked(self.last_position, current)?;
+        }
+        Ok(())
+    }
+
     /// Moves to a target in a given time; the caller restores the builder if
     /// this fails.
     fn move_to_in_time_unchecked(
@@ -327,6 +337,16 @@ impl TrajectoryBuilder {
         if duration_msec == 0 {
             return Err(TrajectoryBuilderError::ZeroDuration);
         }
+        let start = self.last_position;
+        let distance = hypotf(
+            hypotf(target.x - start.x, target.y - start.y),
+            target.z - start.z,
+        );
+        if distance == 0.0 {
+            // A move that does not change the position holds it; the motion
+            // profile below would divide by the zero length of the move
+            return self.hold_position_for_unchecked(duration_msec);
+        }
         if !max_acceleration.is_finite() || max_acceleration <= 0.0 || duration_msec < 3 {
             // Constant velocity along a straight line; also when the
             // duration is too short for three segments
@@ -334,11 +354,6 @@ impl TrajectoryBuilder {
         }
 
         // The travel velocity and the durations of the phases
-        let start = self.last_position;
-        let distance = hypotf(
-            hypotf(target.x - start.x, target.y - start.y),
-            target.z - start.z,
-        );
         let duration_sec = msec_to_sec(duration_msec);
         let mut travel_speed =
             travel_velocity_for_distance(distance, duration_sec, max_acceleration);

@@ -22,9 +22,9 @@
 set -euo pipefail
 
 LIBSKYBRUSH_URL=https://github.com/skybrush-io/libskybrush.git
-# Unreleased fixes of the show controller after 6.0.2
-LIBSKYBRUSH_TAG=
-LIBSKYBRUSH_COMMIT=24196148ac8dd9d7e40ea5bcd27536badd069cdc
+# The release that the crate is on par with
+LIBSKYBRUSH_TAG=6.0.4
+LIBSKYBRUSH_COMMIT=a6d4c4b8e4dafc804843c242499ff79603fdc3c7
 
 SPEC_URL=https://github.com/skybrush-io/file-formats-doc.git
 SPEC_COMMIT=710666990d718873a8d1d45e79f778fefe32f26f

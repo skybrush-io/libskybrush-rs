@@ -1,6 +1,6 @@
 # Deliberate differences from the C library
 
-Where the crate behaves differently from libskybrush (6.0.2 and the fixes on its main branch since then) on purpose, the
+Where the crate behaves differently from libskybrush 6.0.4 on purpose, the
 difference is recorded here, with the reason. Each one was approved by the
 maintainer; behaviour that is not listed here follows the C library.
 

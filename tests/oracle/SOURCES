@@ -7,7 +7,7 @@ conformance/    https://github.com/skybrush-io/file-formats-doc.git 710666990d71
                 spec/skyb/conformance
 format/         https://github.com/skybrush-io/file-formats-doc.git 710666990d718873a8d1d45e79f778fefe32f26f
                 spec/skyb/traces
-api/            https://github.com/skybrush-io/libskybrush.git 24196148ac8dd9d7e40ea5bcd27536badd069cdc (no release)
+api/            https://github.com/skybrush-io/libskybrush.git a6d4c4b8e4dafc804843c242499ff79603fdc3c7 (tag 6.0.4)
                 test/api_traces, without the generators
 #
 # The API traces of <name>.json are computed from test/fixtures/<name>.skyb of

@@ -7,6 +7,16 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+Feature parity with version 6.0.4 of the C library.
+
+### Fixed
+
+- `TrajectoryBuilder::move_to_in_time()` holds the position for the given
+  duration when the target is the current position, like
+  `hold_position_for()`. It used to fail when the acceleration was limited,
+  as it divided the direction of the move by its zero length, and to split
+  the hold into halves otherwise.
+
 ## [0.1.0] - 2026-10-29
 
 The first release: a rewrite of the C library libskybrush 6.0.2 in Rust,

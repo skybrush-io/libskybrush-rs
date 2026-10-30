@@ -2,8 +2,7 @@
 
 A Rust rewrite of the C library [libskybrush](../libskybrush) (parsing and
 playback of Skybrush drone show files), with feature parity to **libskybrush
-6.0.2** where possible, including the fixes made since then on its main
-branch. The crate is called `skybrush`.
+6.0.4** where possible. The crate is called `skybrush`.
 
 ## Why it exists
 
@@ -113,11 +112,10 @@ API, which this crate does not replicate.
   The reference implementation of the comparison is
   `../libskybrush/test/traces/compare_traces.py`.
 - The oracle is vendored into `tests/oracle` by `scripts/vendor-oracle.sh`,
-  pinned to commit `2419614` of libskybrush (after 6.0.2, not released yet;
-  pin a release tag again once there is one) and commit `7106669` of the spec
-  repository; `tests/oracle/SOURCES` records the source commits. Do not edit
-  it by hand, and do not let the tests read the sibling repositories directly.
-  `scripts/vendor-oracle.sh --check` verifies it.
+  pinned to the tag `6.0.4` of libskybrush (commit `a6d4c4b`) and commit
+  `7106669` of the spec repository; `tests/oracle/SOURCES` records the source
+  commits. Do not edit it by hand, and do not let the tests read the sibling
+  repositories directly. `scripts/vendor-oracle.sh --check` verifies it.
 
 ## Behaviour that is easy to get wrong
 
