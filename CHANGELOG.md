@@ -7,6 +7,8 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-30
+
 Feature parity with version 6.0.4 of the C library.
 
 ### Fixed
@@ -32,5 +34,6 @@ with the fixes made to the C library since then.
 - Time axes, screenplays and the show controller.
 
 <!-- Links to the tags; cargo-release updates them (see release.toml) -->
-[Unreleased]: https://github.com/skybrush-io/libskybrush-rs/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/skybrush-io/libskybrush-rs/compare/0.1.1...HEAD
+[0.1.1]: https://github.com/skybrush-io/libskybrush-rs/releases/tag/0.1.1
 [0.1.0]: https://github.com/skybrush-io/libskybrush-rs/releases/tag/0.1.0
