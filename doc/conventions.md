@@ -2,7 +2,7 @@
 
 How the crate is organised and the rules its code follows. The background
 (why the crate exists, the module runtime of the flight controller and the
-test oracle) is in `CLAUDE.md`; this document does not repeat it. Where the
+test oracle) is in `AGENTS.md`; this document does not repeat it. Where the
 public API departs from the Rust API guidelines, and why, is in
 `rust-api-deviations.md`.
 
@@ -235,7 +235,7 @@ writes a longer path (e.g. in a macro or a `#[derive]`), that wins.
 
 ## Floating point and toolchain
 
-As in `CLAUDE.md`: `f32` with math functions from `libm`, no `mul_add`, and no
+As in `AGENTS.md`: `f32` with math functions from `libm`, no `mul_add`, and no
 contortions to be bit-exact with C. The minimum supported Rust version is
 1.98.1.
 
