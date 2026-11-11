@@ -284,9 +284,8 @@ impl<'a> RthPlan<'a> {
 
     fn from_cow(bytes: Cow<'a, [u8]>) -> Result<Self, RthPlanError> {
         validate(&bytes)?;
-        // The first byte holds flags without a meaning yet; the highest bit
-        // of the scale is reserved
-        let scale = f32::from(bytes.get(1).map_or(0, |&scale| scale & 0x7f));
+        // The first byte holds flags without a meaning yet
+        let scale = f32::from(scale_units(&bytes));
         let u16_at = |offset| read_u16(&bytes, offset).unwrap_or_default();
         let max_acceleration = match u16_at(2) {
             // Zero means no limit
@@ -299,7 +298,13 @@ impl<'a> RthPlan<'a> {
             value => Some(f32::from(value)),
         };
         let landing_altitude = f32::from(read_i16(&bytes, 6).unwrap_or_default()) * scale;
-        let num_points = usize::from(u16_at(8));
+        // A plan with a scale of zero is empty; applying the scale would move
+        // every point to the origin instead
+        let num_points = if has_zero_scale(&bytes) {
+            0
+        } else {
+            usize::from(u16_at(8))
+        };
         Ok(Self {
             bytes,
             scale,
@@ -400,6 +405,10 @@ impl<'a> RthPlan<'a> {
     /// The number of entries.
     #[must_use]
     pub fn num_entries(&self) -> usize {
+        if has_zero_scale(&self.bytes) {
+            // The entry table of a plan with a scale of zero is ignored
+            return 0;
+        }
         self.offset_of_point(self.num_points)
             .and_then(|offset| read_u16(&self.bytes, offset))
             .map_or(0, usize::from)
@@ -555,6 +564,18 @@ impl Reader<'_, '_> {
     }
 }
 
+/// The scale in the body of an RTH plan block, or zero if the body is too
+/// short. The highest bit of the scale is reserved.
+fn scale_units(bytes: &[u8]) -> u8 {
+    bytes.get(1).map_or(0, |&scale| scale & 0x7f)
+}
+
+/// Whether the body of an RTH plan block has a scale of zero, which makes the
+/// plan empty.
+fn has_zero_scale(bytes: &[u8]) -> bool {
+    scale_units(bytes) == 0
+}
+
 /// Checks that the body of an RTH plan block is well-formed: its header, its
 /// points and its entries fit in it. Varints above 32 bits are not rejected
 /// here; they are reported when the entry is evaluated.
@@ -562,6 +583,10 @@ fn validate(bytes: &[u8]) -> Result<(), RthPlanError> {
     let corrupted = RthPlanError::Corrupted;
     if bytes.len() < HEADER_LENGTH {
         return Err(corrupted);
+    }
+    if has_zero_scale(bytes) {
+        // The plan is empty and the rest of the block is ignored
+        return Ok(());
     }
     let num_points = usize::from(read_u16(bytes, HEADER_LENGTH - 2).unwrap_or_default());
     let mut rest = bytes
@@ -664,6 +689,38 @@ mod tests {
             // Before the show, the plan lands in place without decoding
             assert_eq!(evaluate(second_entry, -1.0), Ok(-1.0));
         }
+    }
+
+    #[test]
+    fn a_zero_scale_makes_the_plan_empty() {
+        let mut body = plan_with_undecodable_second_entry(&[0x22, 0x0f, 0x00, 0x32, 0x05]);
+        body[1] = 0x00;
+        // The reserved bit of the scale is set and the point array is truncated
+        let malformed = [
+            0x00, 0x80, 0xd0, 0x07, 0xe8, 0x03, 0x00, 0x00, 0x02, 0x00, 0x2c, 0x01, 0x90,
+        ];
+
+        for bytes in [&body[..], &malformed[..]] {
+            let plan = RthPlan::from_buffer(bytes).expect("a plan with a scale of zero is valid");
+            assert_eq!(plan.num_points(), 0);
+            assert_eq!(plan.num_entries(), 0);
+            assert!(plan.is_empty());
+            for time_sec in [-1.0, 0.0, 10.0, 15.0, 100.0] {
+                let entry = plan
+                    .evaluate_at(time_sec)
+                    .expect("an empty plan lands in place");
+                assert_eq!(
+                    entry,
+                    RthPlanEntry::land_in_place_with_defaults(&plan, time_sec)
+                );
+            }
+        }
+
+        // The header must still be complete
+        assert!(matches!(
+            RthPlan::from_buffer(&body[..HEADER_LENGTH - 1]),
+            Err(RthPlanError::Corrupted)
+        ));
     }
 
     #[test]

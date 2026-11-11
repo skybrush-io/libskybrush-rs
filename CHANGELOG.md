@@ -7,6 +7,14 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Fixed
+
+- An RTH plan block with a scale factor of zero is an empty plan, like a
+  trajectory block with a scale factor of zero: `RthPlan` ignores its points
+  and entries, even if they are malformed, and lands in place at any time.
+  It used to apply the scale as-is, which moved every target point to the
+  origin.
+
 ## [0.1.1] - 2026-10-30
 
 Feature parity with version 6.0.4 of the C library.
