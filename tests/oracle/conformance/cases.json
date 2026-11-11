@@ -1067,7 +1067,7 @@
     },
     {
       "id": "light-multi-byte-duration",
-      "description": "Durations are varints and may span multiple bytes.",
+      "description": "Durations are varuints and may span multiple bytes.",
       "spec": [
         "light_program_block.adoc"
       ],
@@ -1985,6 +1985,38 @@
       }
     },
     {
+      "id": "rth-zero-scale",
+      "description": "A scale factor of zero means that the RTH plan is empty; its points and entries are ignored.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b796201041c000000d007e803000002002c01900170fed4fe0200200000220f003205",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [],
+          "num_entries": 0
+        }
+      }
+    },
+    {
+      "id": "rth-zero-scale-malformed-body",
+      "description": "The body of an RTH plan with a scale factor of zero is ignored even if it is malformed; the reserved bit of the scale byte does not count.",
+      "spec": [
+        "rth_plan_block.adoc"
+      ],
+      "bytes": "736b7962010411000080d007e803000002002c01900170fed4",
+      "expect": {
+        "file": "SUCCESS",
+        "rth_plan": {
+          "result": "SUCCESS",
+          "points_mm": [],
+          "num_entries": 0
+        }
+      }
+    },
+    {
       "id": "rth-header-only",
       "description": "An RTH plan without points and without an entry table has no entries.",
       "spec": [
@@ -2085,8 +2117,8 @@
       }
     },
     {
-      "id": "rth-varint-five-bytes",
-      "description": "Varints may be five bytes long; the time of the only entry is UINT32_MAX seconds.",
+      "id": "rth-varuint-five-bytes",
+      "description": "Varuints may be five bytes long; the time of the only entry is UINT32_MAX seconds.",
       "spec": [
         "rth_plan_block.adoc",
         "overview.adoc"
@@ -2102,8 +2134,8 @@
       }
     },
     {
-      "id": "rth-varint-non-minimal",
-      "description": "A varint may use more bytes than necessary as long as it is at most five bytes long.",
+      "id": "rth-varuint-non-minimal",
+      "description": "A varuint may use more bytes than necessary as long as it is at most five bytes long.",
       "spec": [
         "rth_plan_block.adoc",
         "overview.adoc"
@@ -2119,8 +2151,8 @@
       }
     },
     {
-      "id": "rth-undecodable-entry-varint-overflow",
-      "description": "An entry with a varint that does not fit into 32 bits does not make the RTH plan invalid.",
+      "id": "rth-undecodable-entry-varuint-overflow",
+      "description": "An entry with a varuint that does not fit into 32 bits does not make the RTH plan invalid.",
       "spec": [
         "rth_plan_block.adoc",
         "overview.adoc"

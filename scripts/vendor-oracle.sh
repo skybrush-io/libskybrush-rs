@@ -23,11 +23,11 @@ set -euo pipefail
 
 LIBSKYBRUSH_URL=https://github.com/skybrush-io/libskybrush.git
 # The release that the crate is on par with
-LIBSKYBRUSH_TAG=6.0.4
-LIBSKYBRUSH_COMMIT=a6d4c4b8e4dafc804843c242499ff79603fdc3c7
+LIBSKYBRUSH_TAG=6.0.5
+LIBSKYBRUSH_COMMIT=39425895ca7cef74417a9836f7ca92938e7c2787
 
 SPEC_URL=https://github.com/skybrush-io/file-formats-doc.git
-SPEC_COMMIT=710666990d718873a8d1d45e79f778fefe32f26f
+SPEC_COMMIT=92336b08f7ef661e33b624ae131365c1d629fe01
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 ORACLE="$ROOT/tests/oracle"
@@ -36,9 +36,12 @@ SPEC_REPO=${SPEC_REPO:-"$ROOT/../skybrush-file-formats-doc"}
 
 check=0
 case "${1:-}" in
-  "") ;;
-  --check) check=1 ;;
-  *) echo "usage: $0 [--check]" >&2; exit 2 ;;
+"") ;;
+--check) check=1 ;;
+*)
+  echo "usage: $0 [--check]" >&2
+  exit 2
+  ;;
 esac
 
 die() {
@@ -59,8 +62,8 @@ repo_with_commit() {
   fi
   local repo="$work/$name.git"
   git init -q --bare "$repo"
-  git -C "$repo" fetch -q --depth 1 "$url" "$ref" >&2 \
-    || die "cannot fetch $ref from $url"
+  git -C "$repo" fetch -q --depth 1 "$url" "$ref" >&2 ||
+    die "cannot fetch $ref from $url"
   echo "$repo"
 }
 
@@ -68,8 +71,8 @@ repo_with_commit() {
 verify_tag() {
   local repo=$1 tag=$2 commit=$3 actual
   if actual=$(git -C "$repo" rev-parse -q --verify "refs/tags/$tag^{commit}"); then
-    [ "$actual" = "$commit" ] \
-      || die "tag $tag of $repo points to $actual, not to the pinned $commit"
+    [ "$actual" = "$commit" ] ||
+      die "tag $tag of $repo points to $actual, not to the pinned $commit"
   fi
 }
 
@@ -80,8 +83,8 @@ extract() {
   local depth
   depth=$(echo "$path" | awk -F/ '{ print NF }')
   mkdir -p "$dest"
-  git -C "$repo" archive --format=tar "$commit" -- "$path" \
-    | tar -x -C "$dest" --strip-components "$depth"
+  git -C "$repo" archive --format=tar "$commit" -- "$path" |
+    tar -x -C "$dest" --strip-components "$depth"
 }
 
 if [ -n "$LIBSKYBRUSH_TAG" ]; then
@@ -98,8 +101,8 @@ spec=$(repo_with_commit spec "$SPEC_REPO" "$SPEC_URL" "$SPEC_COMMIT" "$SPEC_COMM
 if [ -n "$LIBSKYBRUSH_TAG" ]; then
   verify_tag "$libskybrush" "$LIBSKYBRUSH_TAG" "$LIBSKYBRUSH_COMMIT"
 fi
-git -C "$libskybrush" cat-file -e "$LIBSKYBRUSH_COMMIT^{commit}" 2>/dev/null \
-  || die "$libskybrush_ref does not point to $LIBSKYBRUSH_COMMIT"
+git -C "$libskybrush" cat-file -e "$LIBSKYBRUSH_COMMIT^{commit}" 2>/dev/null ||
+  die "$libskybrush_ref does not point to $LIBSKYBRUSH_COMMIT"
 
 staging="$work/oracle"
 extract "$spec" "$SPEC_COMMIT" spec/skyb/conformance "$staging/conformance"
@@ -117,18 +120,18 @@ cp "$work/api"/*.json "$work/api/README.md" "$staging/api/"
 # second copy. Fail if the two ever diverge.
 for trace in "$staging/api"/*.json; do
   name=$(basename "$trace" .json)
-  case "$name" in scenarios|tolerances) continue ;; esac
+  case "$name" in scenarios | tolerances) continue ;; esac
   fixture=$(git -C "$libskybrush" rev-parse -q --verify \
-    "$LIBSKYBRUSH_COMMIT:test/fixtures/$name.skyb") \
-    || die "no fixture for the API trace $name"
+    "$LIBSKYBRUSH_COMMIT:test/fixtures/$name.skyb") ||
+    die "no fixture for the API trace $name"
   show=$(git -C "$spec" rev-parse -q --verify \
-    "$SPEC_COMMIT:spec/skyb/traces/$name.skyb") \
-    || die "the API trace $name has no show file among the format traces"
-  [ "$fixture" = "$show" ] \
-    || die "the fixture of the API trace $name differs from format/$name.skyb"
+    "$SPEC_COMMIT:spec/skyb/traces/$name.skyb") ||
+    die "the API trace $name has no show file among the format traces"
+  [ "$fixture" = "$show" ] ||
+    die "the fixture of the API trace $name differs from format/$name.skyb"
 done
 
-cat > "$staging/SOURCES" <<EOF
+cat >"$staging/SOURCES" <<EOF
 # The test oracle of the crate, copied by scripts/vendor-oracle.sh from the
 # commits below. Do not edit these files; change the pins in the script and
 # run it again.

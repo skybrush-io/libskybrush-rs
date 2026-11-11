@@ -3,11 +3,11 @@
 # run it again.
 #
 # directory     repository and commit, path
-conformance/    https://github.com/skybrush-io/file-formats-doc.git 710666990d718873a8d1d45e79f778fefe32f26f
+conformance/    https://github.com/skybrush-io/file-formats-doc.git 92336b08f7ef661e33b624ae131365c1d629fe01
                 spec/skyb/conformance
-format/         https://github.com/skybrush-io/file-formats-doc.git 710666990d718873a8d1d45e79f778fefe32f26f
+format/         https://github.com/skybrush-io/file-formats-doc.git 92336b08f7ef661e33b624ae131365c1d629fe01
                 spec/skyb/traces
-api/            https://github.com/skybrush-io/libskybrush.git a6d4c4b8e4dafc804843c242499ff79603fdc3c7 (tag 6.0.4)
+api/            https://github.com/skybrush-io/libskybrush.git 39425895ca7cef74417a9836f7ca92938e7c2787 (tag 6.0.5)
                 test/api_traces, without the generators
 #
 # The API traces of <name>.json are computed from test/fixtures/<name>.skyb of
